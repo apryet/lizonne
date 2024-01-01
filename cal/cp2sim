@@ -1,0 +1,3 @@
+#!/bin/bash
+cp ./Lizonne.* ../sim/
+cp ./chasim.out ../sim/chasim.out.cal

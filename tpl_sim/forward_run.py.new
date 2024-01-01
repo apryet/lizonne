@@ -1,0 +1,109 @@
+
+
+print('███████╗ ██████╗ ██████╗ ██╗    ██╗ █████╗ ██████╗ ██████╗     ██████╗ ██╗   ██╗███╗   ██╗')
+print('██╔════╝██╔═══██╗██╔══██╗██║    ██║██╔══██╗██╔══██╗██╔══██╗    ██╔══██╗██║   ██║████╗  ██║')
+print('█████╗  ██║   ██║██████╔╝██║ █╗ ██║███████║██████╔╝██║  ██║    ██████╔╝██║   ██║██╔██╗ ██║')
+print('██╔══╝  ██║   ██║██╔══██╗██║███╗██║██╔══██║██╔══██╗██║  ██║    ██╔══██╗██║   ██║██║╚██╗██║')
+print('██║     ╚██████╔╝██║  ██║╚███╔███╔╝██║  ██║██║  ██║██████╔╝    ██║  ██║╚██████╔╝██║ ╚████║')
+print('╚═╝      ╚═════╝ ╚═╝  ╚═╝ ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝')
+
+
+
+# -- Import basic python modules
+import os
+import pyemu
+import multiprocessing as mp
+import numpy as np
+import pandas as pd
+import pymarthe
+from pymarthe.utils import marthe_utils, pest_utils
+
+# -- Import extra python modules
+import helpers
+
+# -- Extra function n°1
+def lizonne_postproc(mm=None,out_dir=os.path.join('pest','sim')):
+    station_locs = ['P8284010', 'P8215010', 'P7250001', 'P7270001']
+    m3_from_monthly_m3sec = 365.25/12*86400
+    m3_from_7day_m3sec = 7*86400
+    # load simulated values 
+    prn_df = marthe_utils.read_prn()
+    # load aquifer pumping data from MartheModel 
+    if mm is None:
+        mm = pymarthe.MartheModel('Lizonne.rma', spatial_index = 'Lizonne_si')
+    # get simulation period 
+    sim_start,sim_end = mm.get_time_window()
+    # optimization starts at the beginning of the last year of the simulation period
+    opt_start = pd.to_datetime(str(sim_end.year))
+
+    # --- Get total pumping volumes over simulation period (m3)
+    # processing aquifer pumping
+    mm.load_prop('aqpump')
+    aqpump_df = mm.prop['aqpump'].data
+    ap_dates = mm.mldates[aqpump_df.istep]
+    aqpump_ss = aqpump_df.loc[ap_dates >= opt_start] # subset to optimization period
+    aqpump_value = (aqpump_ss.value*(-1*m3_from_monthly_m3sec)).sum() # monthly pumping rates in m3/s to m3
+    pest_utils.write_simfile([sim_end], [aqpump_value], os.path.join(out_dir,'tot_aqpump.dat'))
+
+    # processing river pumping
+    mm.load_prop('rivpump')
+    rivpump_df = mm.prop['rivpump'].data
+    rp_dates = mm.mldates[rivpump_df.istep]
+    rivpump_ss = rivpump_df.loc[rp_dates >= opt_start] # subset to optimization period
+    rivpump_value = (rivpump_ss.value*(-1*m3_from_monthly_m3sec)).sum() # monthly pumping rates in m3/s to m3
+    pest_utils.write_simfile([sim_end], [rivpump_value], os.path.join(out_dir,'tot_rivpump.dat'))
+
+    # total pumping 
+    tot_value = aqpump_value + rivpump_value
+    pest_utils.write_simfile([sim_end], [tot_value], os.path.join(out_dir,'tot_pump.dat'))
+
+    # --- Get river deficit at gaging stations
+
+    # load DOE data 
+    doe_df = pd.read_csv('doe.dat',index_col=0)
+    # get simulated records 
+    qsim_df = prn_df.loc[:,(slice(None), station_locs)].loc[:,'Débit_Rivi']
+    qsim_df = qsim_df.loc[qsim_df.index >= opt_start] # subset to optimization period
+    qsim_df = qsim_df.asfreq('7D') # set 7-day-frequency (necessary ?)
+
+    # compute discharge deficit (m3 from m3/s at the 10-day-frequency)
+    deficit = (doe_df['alerte'] - qsim_df).mul(m3_from_7day_m3sec*qsim_df.le(doe_df['alerte'])).sum()
+    #write total deficit
+    pest_utils.write_simfile([sim_end], [deficit.sum()], os.path.join(out_dir,f'deficit_tot.dat'))
+    for loc in station_locs:
+            value = deficit.loc[loc]  # m3
+            pest_utils.write_simfile([sim_end], [value], os.path.join(out_dir,f'deficit_{loc}.dat'))
+
+# -- Extra function n°2
+def lizonne_preproc():
+
+    # processing aquifer pumping 
+    parfacmul(facfile = os.path.join('pest','par','aqpumpfac.dat'), 
+              org_parfile = os.path.join('pest','par','aqpump.dat.org'),
+              parfile = os.path.join('pest','par','aqpump.dat'),
+              keys=['boundname','layer','istep']
+              )
+
+    # processing river pumping 
+    parfacmul(facfile = os.path.join('pest','par','rivpumpfac.dat'), 
+              org_parfile = os.path.join('pest','par','rivpump.dat.org'),
+              parfile = os.path.join('pest','par','rivpump.dat'),
+              keys=['prefix','aff_r','istep']
+              )
+
+
+def main():
+	# -- Run preproc functions
+	lizonne_preproc()
+	# -- Run model from .config file
+	pymarthe.utils.pest_utils.run_from_config("opt_lizonne.config")
+	# -- Run extra functions
+	lizonne_postproc()
+	lizonne_preproc()
+
+
+# -- Launch forward run
+if __name__ == '__main__':
+	mp.freeze_support()
+	main()
+

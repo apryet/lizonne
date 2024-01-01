@@ -1,0 +1,327 @@
+ Projet Modifié (Lizonne.rma) [V7.8]
+
+ ==============================================================================
+ Lecture des données de :  Arbre (branchem.) des Affluents Rivières et Lacs
+   Fichier = Lizonne.arb_r
+
+   Affluents de réseau de rivières
+
+ Lecture de 14 Affluents de réseau de rivières
+
+ L'Affluent n° 418 n'a pas d'aval.
+ L'Affluent n° 640 n'a pas d'aval.
+
+
+
+                   Réseau des Rivières (366 tronçon(s))
+
+    Vérification de l'arborescence des 14 affluent(s)
+   N°           Numéro        Numéro         Nombre
+ ordre         affluent      affluent     d'affluents
+                             exutoire     du parcours
+(    1)           410           418             7
+(    2)           411           418             7
+(    3)           420           418             6
+(    4)           412           418             6
+(    5)           421           418             5
+(    6)           413           418             5
+(    7)           414           418             4
+(    8)           419           418             4
+(    9)           422           418             3
+(   10)           416           418             3
+(   11)           417           418             2
+(   12)           415           418             2
+(   13)           418           418             1
+(   14)           640           640             1
+
+
+    Liste des 8 source(s) du réseau de Rivières
+ Ordre    Ordre       N°     N°    Nb de tronçons    Débit
+ Source  Tronçon    Afflu. Tronç   avant exutoire    Amont
+(     1) (   305)    415      1        40              0.000
+(     2) (    64)    640      2        45              0.000
+(     3) (   114)    419      1        58              0.000
+(     4) (   261)    416      1        64              0.000
+(     5) (    41)    413      1        87              0.000
+(     6) (    30)    420      1        92              0.000
+(     7) (   243)    411      1       118              0.000
+(     8) (   138)    410      1       131              0.000
+
+    Liste des 2 exutoire(s) du réseau de Rivières :
+ Ordre    Ordre       N°     N°
+ Exut.   tronçon  Affl/Lac Tronçon
+(     1) (     1)    640     47
+(     2) (   365)    418      6
+
+ Réseau des Rivières (366 tronçons)
+
+         2 = Nombre de passages nécessaires pour calculer les ordres de Strahler
+         0 = Nombre d'écarts résiduels d'ordres au dernier passage
+         9 = Nombre de jonctions du réseau
+         2 = Ordre de Strahler maximal
+ ** Affl. :  420 Tronç:    2         Couc:  4  Col:  30 Lig:  13            **
+ Altitude Fond Riv =   154.000 < Subs_Nappe =   156.900
+ ** Affl. :  420 Tronç:    4         Couc:  2  Col:  29 Lig:  14            **
+ Altitude Fond Riv =   142.000 < Subs_Nappe =   150.000
+ ** Affl. :  420 Tronç:    3         Couc:  2  Col:  30 Lig:  14            **
+ Altitude Fond Riv =   149.000 < Subs_Nappe =   160.700
+ ** Affl. :  420 Tronç:    5         Couc:  2  Col:  29 Lig:  15            **
+ Altitude Fond Riv =   136.000 < Subs_Nappe =   150.000
+ ** Affl. :  413 Tronç:    2                   Col:  21 Lig:  16            **
+ Altitude Fond Riv =   166.000 < Subs_Nappe =   182.900
+ ** Affl. :  420 Tronç:    8         Couc:  2  Col:  28 Lig:  17            **
+ Altitude Fond Riv =   128.000 < Subs_Nappe =   134.300
+ ** Affl. :  413 Tronç:    5                   Col:  20 Lig:  18            **
+ Altitude Fond Riv =   140.000 < Subs_Nappe =   167.800
+ ** Affl. :  420 Tronç:    9         Couc:  2  Col:  28 Lig:  18            **
+ Altitude Fond Riv =   127.000 < Subs_Nappe =   130.000
+ ** Affl. :  420 Tronç:   11         Couc:  2  Col:  28 Lig:  20            **
+ Altitude Fond Riv =   118.000 < Subs_Nappe =   123.600
+ ** Affl. :  420 Tronç:   12                   Col:  28 Lig:  21            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   118.000
+ ** Affl. :  420 Tronç:   15         Couc:  2  Col:  28 Lig:  24            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   113.200
+ ** Affl. :  420 Tronç:   16         Couc:  2  Col:  28 Lig:  25            **
+ Altitude Fond Riv =   102.000 < Subs_Nappe =   115.500
+ ** Affl. :  420 Tronç:   17         Couc:  4  Col:  28 Lig:  26            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =    97.500
+ ** Affl. :  420 Tronç:   18         Couc:  4  Col:  28 Lig:  27            **
+ Altitude Fond Riv =    98.000 < Subs_Nappe =   100.000
+ ** Affl. :  420 Tronç:   19                   Col:  29 Lig:  27            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =   117.800
+ ** Affl. :  410 Tronç:   46         Couc:  2  Col:  42 Lig:  27            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   126.700
+ ** Affl. :  420 Tronç:   20         Couc:  2  Col:  29 Lig:  28            **
+ Altitude Fond Riv =    95.000 < Subs_Nappe =   101.200
+ ** Affl. :  412 Tronç:   57         Couc:  2  Col:  34 Lig:  28            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =   101.800
+ ** Affl. :  410 Tronç:   49         Couc:  2  Col:  40 Lig:  28            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   110.000
+ ** Affl. :  410 Tronç:   48         Couc:  2  Col:  41 Lig:  28            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   124.000
+ ** Affl. :  410 Tronç:   45         Couc:  2  Col:  42 Lig:  28            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   126.700
+ ** Affl. :  420 Tronç:   22         Couc:  4  Col:  29 Lig:  29            **
+ Altitude Fond Riv =    91.000 < Subs_Nappe =    95.000
+ ** Affl. :  412 Tronç:   60         Couc:  2  Col:  32 Lig:  29            **
+ Altitude Fond Riv =    95.000 < Subs_Nappe =    98.900
+ ** Affl. :  412 Tronç:   59         Couc:  2  Col:  33 Lig:  29            **
+ Altitude Fond Riv =    97.000 < Subs_Nappe =   101.600
+ ** Affl. :  412 Tronç:   55         Couc:  2  Col:  35 Lig:  29            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =   105.300
+ ** Affl. :  410 Tronç:   39         Couc:  4  Col:  47 Lig:  29            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   116.800
+ ** Affl. :  419 Tronç:    2                   Col:   8 Lig:  30            **
+ Altitude Fond Riv =   104.000 < Subs_Nappe =   111.000
+ ** Affl. :  411 Tronç:   40         Couc:  2  Col:  36 Lig:  30            **
+ Altitude Fond Riv =    99.000 < Subs_Nappe =   108.700
+ ** Affl. :  410 Tronç:   37         Couc:  4  Col:  48 Lig:  30            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   121.500
+ ** Affl. :  411 Tronç:   37         Couc:  2  Col:  38 Lig:  31            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =   113.100
+ ** Affl. :  410 Tronç:   36         Couc:  4  Col:  48 Lig:  31            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   119.300
+ ** Affl. :  410 Tronç:   31         Couc:  4  Col:  51 Lig:  31            **
+ Altitude Fond Riv =   121.000 < Subs_Nappe =   141.400
+ ** Affl. :  410 Tronç:    1         Couc:  5  Col:  75 Lig:  31            **
+ Altitude Fond Riv =   198.000 < Subs_Nappe =   200.100
+ ** Affl. :  411 Tronç:   36         Couc:  2  Col:  38 Lig:  32            **
+ Altitude Fond Riv =    97.000 < Subs_Nappe =   104.000
+ ** Affl. :  410 Tronç:   34         Couc:  2  Col:  49 Lig:  32            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   137.300
+ ** Affl. :  410 Tronç:   30         Couc:  2  Col:  51 Lig:  32            **
+ Altitude Fond Riv =   123.000 < Subs_Nappe =   137.400
+ ** Affl. :  410 Tronç:   29         Couc:  4  Col:  52 Lig:  32            **
+ Altitude Fond Riv =   126.000 < Subs_Nappe =   132.500
+ ** Affl. :  410 Tronç:   28         Couc:  4  Col:  53 Lig:  32            **
+ Altitude Fond Riv =   126.000 < Subs_Nappe =   131.100
+ ** Affl. :  410 Tronç:   27         Couc:  4  Col:  54 Lig:  32            **
+ Altitude Fond Riv =   126.000 < Subs_Nappe =   127.700
+ ** Affl. :  410 Tronç:   25         Couc:  4  Col:  56 Lig:  32            **
+ Altitude Fond Riv =   133.000 < Subs_Nappe =   136.300
+ ** Affl. :  410 Tronç:   22         Couc:  4  Col:  59 Lig:  32            **
+ Altitude Fond Riv =   136.000 < Subs_Nappe =   139.000
+ ** Affl. :  410 Tronç:   17         Couc:  4  Col:  62 Lig:  32            **
+ Altitude Fond Riv =   143.000 < Subs_Nappe =   171.300
+ ** Affl. :  421 Tronç:   70         Couc:  2  Col:  27 Lig:  33            **
+ Altitude Fond Riv =    86.000 < Subs_Nappe =   114.500
+ ** Affl. :  411 Tronç:   35         Couc:  4  Col:  38 Lig:  33            **
+ Altitude Fond Riv =   102.000 < Subs_Nappe =   123.000
+ ** Affl. :  411 Tronç:   34         Couc:  2  Col:  39 Lig:  33            **
+ Altitude Fond Riv =   103.000 < Subs_Nappe =   116.700
+ ** Affl. :  410 Tronç:   20         Couc:  2  Col:  60 Lig:  33            **
+ Altitude Fond Riv =   136.000 < Subs_Nappe =   165.900
+ ** Affl. :  410 Tronç:   19         Couc:  2  Col:  61 Lig:  33            **
+ Altitude Fond Riv =   140.000 < Subs_Nappe =   167.700
+ ** Affl. :  410 Tronç:   13         Couc:  4  Col:  65 Lig:  33            **
+ Altitude Fond Riv =   149.000 < Subs_Nappe =   171.000
+ ** Affl. :  410 Tronç:   12         Couc:  4  Col:  66 Lig:  33            **
+ Altitude Fond Riv =   153.000 < Subs_Nappe =   172.700
+ ** Affl. :  421 Tronç:   72         Couc:  2  Col:  26 Lig:  34            **
+ Altitude Fond Riv =    88.000 < Subs_Nappe =   102.600
+ ** Affl. :  411 Tronç:   32         Couc:  2  Col:  40 Lig:  34            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   133.800
+ ** Affl. :  411 Tronç:   28         Couc:  5  Col:  41 Lig:  37            **
+ Altitude Fond Riv =   109.000 < Subs_Nappe =   115.100
+ ** Affl. :  411 Tronç:   27         Couc:  4  Col:  42 Lig:  37            **
+ Altitude Fond Riv =   107.000 < Subs_Nappe =   112.000
+ ** Affl. :  411 Tronç:   26         Couc:  5  Col:  43 Lig:  37            **
+ Altitude Fond Riv =   108.000 < Subs_Nappe =   119.800
+ ** Affl. :  411 Tronç:   25         Couc:  5  Col:  43 Lig:  38            **
+ Altitude Fond Riv =   109.000 < Subs_Nappe =   109.600
+ ** Affl. :  414 Tronç:   84                   Col:  21 Lig:  40            **
+ Altitude Fond Riv =    83.000 < Subs_Nappe =    85.800
+ ** Affl. :  411 Tronç:   20         Couc:  4  Col:  45 Lig:  41            **
+ Altitude Fond Riv =   118.000 < Subs_Nappe =   134.000
+ ** Affl. :  411 Tronç:   19         Couc:  4  Col:  46 Lig:  41            **
+ Altitude Fond Riv =   119.000 < Subs_Nappe =   122.000
+ ** Affl. :  411 Tronç:   18         Couc:  4  Col:  47 Lig:  41            **
+ Altitude Fond Riv =   124.000 < Subs_Nappe =   128.000
+ ** Affl. :  411 Tronç:   14         Couc:  4  Col:  49 Lig:  43            **
+ Altitude Fond Riv =   126.000 < Subs_Nappe =   143.800
+ ** Affl. :  411 Tronç:   13         Couc:  4  Col:  50 Lig:  43            **
+ Altitude Fond Riv =   128.000 < Subs_Nappe =   138.500
+ ** Affl. :  411 Tronç:   12         Couc:  4  Col:  51 Lig:  43            **
+ Altitude Fond Riv =   130.000 < Subs_Nappe =   137.900
+
+  ** Pas de temps n° 0 ; Date = 212.000 :
+ ==> 62 Tronçon(s) avec Niveau Rivière < Altitude du fond de la rivière
+                       ou Altitude fond < Substratum  nappe
+                       ou Altitude fond > Topographie nappe
+                       ou Perméabilité Lit > 0. +  Épaisseur Lit = 0.
+                       ou          Largeur = 0. ou      Longueur = 0.
+                       ou Manning  +   Rugosité = 0. ou Pente du lit = 0.
+
+ ** Affl. :  420 Tronç:    2         Couc:  4  Col:  30 Lig:  13            **
+ Altitude Fond Riv =   154.000 < Subs_Nappe =   156.900
+ ** Affl. :  420 Tronç:    4         Couc:  2  Col:  29 Lig:  14            **
+ Altitude Fond Riv =   142.000 < Subs_Nappe =   150.000
+ ** Affl. :  420 Tronç:    3         Couc:  2  Col:  30 Lig:  14            **
+ Altitude Fond Riv =   149.000 < Subs_Nappe =   160.700
+ ** Affl. :  420 Tronç:    5         Couc:  2  Col:  29 Lig:  15            **
+ Altitude Fond Riv =   136.000 < Subs_Nappe =   150.000
+ ** Affl. :  413 Tronç:    2                   Col:  21 Lig:  16            **
+ Altitude Fond Riv =   166.000 < Subs_Nappe =   182.900
+ ** Affl. :  420 Tronç:    8         Couc:  2  Col:  28 Lig:  17            **
+ Altitude Fond Riv =   128.000 < Subs_Nappe =   134.300
+ ** Affl. :  413 Tronç:    5                   Col:  20 Lig:  18            **
+ Altitude Fond Riv =   140.000 < Subs_Nappe =   167.800
+ ** Affl. :  420 Tronç:    9         Couc:  2  Col:  28 Lig:  18            **
+ Altitude Fond Riv =   127.000 < Subs_Nappe =   130.000
+ ** Affl. :  420 Tronç:   11         Couc:  2  Col:  28 Lig:  20            **
+ Altitude Fond Riv =   118.000 < Subs_Nappe =   123.600
+ ** Affl. :  420 Tronç:   12                   Col:  28 Lig:  21            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   118.000
+ ** Affl. :  420 Tronç:   15         Couc:  2  Col:  28 Lig:  24            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   113.200
+ ** Affl. :  420 Tronç:   16         Couc:  2  Col:  28 Lig:  25            **
+ Altitude Fond Riv =   102.000 < Subs_Nappe =   115.500
+ ** Affl. :  420 Tronç:   17         Couc:  4  Col:  28 Lig:  26            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =    97.500
+ ** Affl. :  420 Tronç:   18         Couc:  4  Col:  28 Lig:  27            **
+ Altitude Fond Riv =    98.000 < Subs_Nappe =   100.000
+ ** Affl. :  420 Tronç:   19                   Col:  29 Lig:  27            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =   117.800
+ ** Affl. :  410 Tronç:   46         Couc:  2  Col:  42 Lig:  27            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   126.700
+ ** Affl. :  420 Tronç:   20         Couc:  2  Col:  29 Lig:  28            **
+ Altitude Fond Riv =    95.000 < Subs_Nappe =   101.200
+ ** Affl. :  412 Tronç:   57         Couc:  2  Col:  34 Lig:  28            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =   101.800
+ ** Affl. :  410 Tronç:   49         Couc:  2  Col:  40 Lig:  28            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   110.000
+ ** Affl. :  410 Tronç:   48         Couc:  2  Col:  41 Lig:  28            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   124.000
+ ** Affl. :  410 Tronç:   45         Couc:  2  Col:  42 Lig:  28            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   126.700
+ ** Affl. :  420 Tronç:   22         Couc:  4  Col:  29 Lig:  29            **
+ Altitude Fond Riv =    91.000 < Subs_Nappe =    95.000
+ ** Affl. :  412 Tronç:   60         Couc:  2  Col:  32 Lig:  29            **
+ Altitude Fond Riv =    95.000 < Subs_Nappe =    98.900
+ ** Affl. :  412 Tronç:   59         Couc:  2  Col:  33 Lig:  29            **
+ Altitude Fond Riv =    97.000 < Subs_Nappe =   101.600
+ ** Affl. :  412 Tronç:   55         Couc:  2  Col:  35 Lig:  29            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =   105.300
+ ** Affl. :  410 Tronç:   39         Couc:  4  Col:  47 Lig:  29            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   116.800
+ ** Affl. :  419 Tronç:    2                   Col:   8 Lig:  30            **
+ Altitude Fond Riv =   104.000 < Subs_Nappe =   111.000
+ ** Affl. :  411 Tronç:   40         Couc:  2  Col:  36 Lig:  30            **
+ Altitude Fond Riv =    99.000 < Subs_Nappe =   108.700
+ ** Affl. :  410 Tronç:   37         Couc:  4  Col:  48 Lig:  30            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   121.500
+ ** Affl. :  411 Tronç:   37         Couc:  2  Col:  38 Lig:  31            **
+ Altitude Fond Riv =    96.000 < Subs_Nappe =   113.100
+ ** Affl. :  410 Tronç:   36         Couc:  4  Col:  48 Lig:  31            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   119.300
+ ** Affl. :  410 Tronç:   31         Couc:  4  Col:  51 Lig:  31            **
+ Altitude Fond Riv =   121.000 < Subs_Nappe =   141.400
+ ** Affl. :  410 Tronç:    1         Couc:  5  Col:  75 Lig:  31            **
+ Altitude Fond Riv =   198.000 < Subs_Nappe =   200.100
+ ** Affl. :  411 Tronç:   36         Couc:  2  Col:  38 Lig:  32            **
+ Altitude Fond Riv =    97.000 < Subs_Nappe =   104.000
+ ** Affl. :  410 Tronç:   34         Couc:  2  Col:  49 Lig:  32            **
+ Altitude Fond Riv =   116.000 < Subs_Nappe =   137.300
+ ** Affl. :  410 Tronç:   30         Couc:  2  Col:  51 Lig:  32            **
+ Altitude Fond Riv =   123.000 < Subs_Nappe =   137.400
+ ** Affl. :  410 Tronç:   29         Couc:  4  Col:  52 Lig:  32            **
+ Altitude Fond Riv =   126.000 < Subs_Nappe =   132.500
+ ** Affl. :  410 Tronç:   28         Couc:  4  Col:  53 Lig:  32            **
+ Altitude Fond Riv =   126.000 < Subs_Nappe =   131.100
+ ** Affl. :  410 Tronç:   27         Couc:  4  Col:  54 Lig:  32            **
+ Altitude Fond Riv =   126.000 < Subs_Nappe =   127.700
+ ** Affl. :  410 Tronç:   25         Couc:  4  Col:  56 Lig:  32            **
+ Altitude Fond Riv =   133.000 < Subs_Nappe =   136.300
+ ** Affl. :  410 Tronç:   22         Couc:  4  Col:  59 Lig:  32            **
+ Altitude Fond Riv =   136.000 < Subs_Nappe =   139.000
+ ** Affl. :  410 Tronç:   17         Couc:  4  Col:  62 Lig:  32            **
+ Altitude Fond Riv =   143.000 < Subs_Nappe =   171.300
+ ** Affl. :  421 Tronç:   70         Couc:  2  Col:  27 Lig:  33            **
+ Altitude Fond Riv =    86.000 < Subs_Nappe =   114.500
+ ** Affl. :  411 Tronç:   35         Couc:  4  Col:  38 Lig:  33            **
+ Altitude Fond Riv =   102.000 < Subs_Nappe =   123.000
+ ** Affl. :  411 Tronç:   34         Couc:  2  Col:  39 Lig:  33            **
+ Altitude Fond Riv =   103.000 < Subs_Nappe =   116.700
+ ** Affl. :  410 Tronç:   20         Couc:  2  Col:  60 Lig:  33            **
+ Altitude Fond Riv =   136.000 < Subs_Nappe =   165.900
+ ** Affl. :  410 Tronç:   19         Couc:  2  Col:  61 Lig:  33            **
+ Altitude Fond Riv =   140.000 < Subs_Nappe =   167.700
+ ** Affl. :  410 Tronç:   13         Couc:  4  Col:  65 Lig:  33            **
+ Altitude Fond Riv =   149.000 < Subs_Nappe =   171.000
+ ** Affl. :  410 Tronç:   12         Couc:  4  Col:  66 Lig:  33            **
+ Altitude Fond Riv =   153.000 < Subs_Nappe =   172.700
+ ** Affl. :  421 Tronç:   72         Couc:  2  Col:  26 Lig:  34            **
+ Altitude Fond Riv =    88.000 < Subs_Nappe =   102.600
+ ** Affl. :  411 Tronç:   32         Couc:  2  Col:  40 Lig:  34            **
+ Altitude Fond Riv =   106.000 < Subs_Nappe =   133.800
+ ** Affl. :  411 Tronç:   28         Couc:  5  Col:  41 Lig:  37            **
+ Altitude Fond Riv =   109.000 < Subs_Nappe =   115.100
+ ** Affl. :  411 Tronç:   27         Couc:  4  Col:  42 Lig:  37            **
+ Altitude Fond Riv =   107.000 < Subs_Nappe =   112.000
+ ** Affl. :  411 Tronç:   26         Couc:  5  Col:  43 Lig:  37            **
+ Altitude Fond Riv =   108.000 < Subs_Nappe =   119.800
+ ** Affl. :  411 Tronç:   25         Couc:  5  Col:  43 Lig:  38            **
+ Altitude Fond Riv =   109.000 < Subs_Nappe =   109.600
+ ** Affl. :  414 Tronç:   84                   Col:  21 Lig:  40            **
+ Altitude Fond Riv =    83.000 < Subs_Nappe =    85.800
+ ** Affl. :  411 Tronç:   20         Couc:  4  Col:  45 Lig:  41            **
+ Altitude Fond Riv =   118.000 < Subs_Nappe =   134.000
+ ** Affl. :  411 Tronç:   19         Couc:  4  Col:  46 Lig:  41            **
+ Altitude Fond Riv =   119.000 < Subs_Nappe =   122.000
+ ** Affl. :  411 Tronç:   18         Couc:  4  Col:  47 Lig:  41            **
+ Altitude Fond Riv =   124.000 < Subs_Nappe =   128.000
+ ** Affl. :  411 Tronç:   14         Couc:  4  Col:  49 Lig:  43            **
+ Altitude Fond Riv =   126.000 < Subs_Nappe =   143.800
+ ** Affl. :  411 Tronç:   13         Couc:  4  Col:  50 Lig:  43            **
+ Altitude Fond Riv =   128.000 < Subs_Nappe =   138.500
+ ** Affl. :  411 Tronç:   12         Couc:  4  Col:  51 Lig:  43            **
+ Altitude Fond Riv =   130.000 < Subs_Nappe =   137.900
+
+  ** Pas de temps n° 1 ; Date = 213.000 :
+ ==> 62 Tronçon(s) avec Niveau Rivière < Altitude du fond de la rivière
+                       ou Altitude fond < Substratum  nappe
+                       ou Altitude fond > Topographie nappe
+                       ou Perméabilité Lit > 0. +  Épaisseur Lit = 0.
+                       ou          Largeur = 0. ou      Longueur = 0.
+                       ou Manning  +   Rugosité = 0. ou Pente du lit = 0.
+

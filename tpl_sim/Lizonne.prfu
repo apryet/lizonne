@@ -1,0 +1,19 @@
+Lizonne
+ *** Profils d'Utilisation                           ***
+         0=Hydrodynamique simple en régime permanent
+         1=Régime Transitoire
+         0=/// Transport ///
+         0=Transport de masse standard
+         0=Zone-Non-Saturée
+         1=Rivières, Drains, Lacs (1=Rivières et/ou Lacs  ;  2=Drains  ;  3=tous les 3)
+         0=Hydroclimatologie, Cultures, Nitrate : 1=+Cultures ; 2=+Cultures+NO3 BICHE ; 3=+Cultures+MONICA
+         0=Salinité (1=Prise en compte  ;  2=Calcul de la salinité et de la densité)
+         0=Interface Eau douce/Eau salée
+         0=Température (1=Prise en compte  ;  2=Calcul de la température)
+         0=Multiphasique
+         0=Écoulements de Gaz
+         0=Couplage Géochimique  ou  Multicomposant [2=PHREEQC ; 3=TREACT ; (1=Analyt.)]
+         0=Utilisation avancée
+         0=Compatibilité avec des versions antérieures
+         0=Utilisation très avancée = Tout
+ *** Fin du fichier <Profil d'Utilisation>           ***

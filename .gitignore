@@ -1,3 +1,29 @@
+# Editor files
+#mac
+.DS_Store
+*~
+
+
+# Marthe output files 
+bilandeb.txt
+*.out.cal
+*.out.full
+marthe.txt
+mart_ver.txt
+*.prn
+*.out
+*.out.cal
+*.out.full
+
+# PyMarthe index files 
+*.config
+*_si.dat
+*_si.idx
+
+# jcb/jco files
+*.jcb
+*.jco
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -1,0 +1,53 @@
+pcf version=2
+* control data keyword
+pestmode                                 estimation
+facparmax                         5.000000E+00
+noptmax                                 0
+svdmode                                 1
+maxsing                               719
+eigthresh                           1e-06
+eigwrite                                1
+svd_pack                       redsvd
+ies_num_reals                  232
+ies_use_empirical_prior        False
+parcov                         prior_pcov.jcb
+obscov                         obs_cov.jcb
+ies_parameter_ensemble         prior_pe.jcb
+ies_observation_ensemble       oe.jcb
+ies_use_approx                 False
+ies_reg_factor                 0.05
+ies_autoadaloc                 False
+ies_autoadaloc_sigma_dist      1
+ies_num_threads                20
+ies_n_iter_mean                0
+ies_subset_size                12
+ies_subset_how                 random
+ies_lambda_mults               0.1,1.0,10.0
+lambda_scale_fac               0.75,1.0,1.25
+ies_initial_lambda             10000
+ies_accept_phi_fac             1.05
+ies_lambda_inc_fac             1.0
+ies_lambda_dec_fac             0.75
+ies_save_lambda_ensembles      False
+ies_enforce_bounds             True
+ies_phi_factor_file            ies_phi_factor.csv
+ies_bad_phi                    100000000.0
+ies_bad_phi_sigma              -0.9
+ies_drop_conflicts             False
+max_run_fail                   1
+overdue_giveup_minutes         100
+overdue_giveup_fac             3
+ies_verbose_level              1
+panther_agent_no_ping_timeout_secs 36000
+* parameter groups external
+cal_lizonne_base.pargp_data.csv
+* parameter data external
+cal_lizonne_base.par_data.csv
+* observation data external
+cal_lizonne_base.obs_data.csv
+* model command line
+python3 forward_run.py
+* model input external
+cal_lizonne_base.tplfile_data.csv
+* model output external
+cal_lizonne_base.insfile_data.csv
