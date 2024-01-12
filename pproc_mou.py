@@ -56,7 +56,7 @@ pasum_df = pd.read_csv('mou_lizonne.pareto.archive.summary.csv')
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1, axis=1),:]
 
 #ngen = feas_front_df.generation.unique().shape[0]
-ngen=6
+ngen=10
 
 cmap = matplotlib.colormaps.get_cmap('gist_heat').reversed()
 
@@ -86,6 +86,9 @@ for gen in range(ngen):
         direction='increasing',
         interp_method='interp1d',
     )
+    if  kn.knee is None :
+        print(f'Could not identify knee point for gen {gen}')
+        continue
     dmds = ax.scatter(kn.knee,kn.knee_y,color='blue',
                marker="D",s=80,label='knee point')
     ax.annotate(gen,(kn.knee,kn.knee_y),ha='center',va='center',

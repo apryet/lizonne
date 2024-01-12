@@ -521,9 +521,13 @@ hobs['date'] = hobs.rec_id.apply(lambda x : prn_df.index[x])
 obs.loc[hobs.loc[hobs.date<opt_start].index,'weight']=0
 
 # set 0-weight to head of pumping cell offending constraints with 0 pumping.
-discard_locs = ['20052','18899','08656','08800','19109','19650','20975','31455']
+discard_locs = ['08656','18427','18428', '19029','19109','19505','20198','20514','20609','20976'] 
 for loc in discard_locs:
     obs.loc[obs.obgnme=='g_pcellh_'+loc,'weight']=0
+
+# should now disable pumping in these cells to avoid unconstrained pumping !
+
+
 
 # ---------------------------------------------
 # --- draw dv population   --------------------
@@ -606,16 +610,16 @@ pst.control_data.noptmax = 50
 pst_name = 'mou_lizonne.pst'
 pst.write(pst_name)
 
-# --- write fac1 pst
-par.loc[dvpars,'parval1']=1.
-pst.control_data.noptmax = 0
-pst_name = 'mou_lizonne_fac1.pst'
-pst.write(pst_name)
-
 # --- write fac0 pst
 par.loc[dvpars,'parval1']=0.
 pst.control_data.noptmax = 0
 pst_name = 'mou_lizonne_fac0.pst'
+pst.write(pst_name)
+
+# --- write fac1 pst
+par.loc[dvpars,'parval1']=1.
+pst.control_data.noptmax = 0
+pst_name = 'mou_lizonne_fac1.pst'
 pst.write(pst_name)
 
 # ---------------------------------------------
