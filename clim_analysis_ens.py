@@ -6,8 +6,8 @@ from matplotlib.lines import Line2D
 plt.rc('font', family='serif', size=11)
 
 
-# --- define "current" and "future" periods, and subset
-# DRIAS "reference period for current climate"
+# --- define "historical" and "future" periods, and subset
+# DRIAS "reference period for historical climate"
 cper_start, cper_end  = pd.to_datetime('1976-01-01'), pd.to_datetime('2005-12-31')
 # DRIAS "mid term horizon"
 #fper_start , fper_end =  pd.to_datetime('2041-01-01'), pd.to_datetime('2070-12-31')
@@ -74,7 +74,7 @@ fit_end = pd.to_datetime('2098-12-31')
 tclimy = climy.loc[(climy.index>fit_start) & (climy.index<fit_end)].groupby(level=1,axis=1).mean()
 t= (tclimy.index.values - tclimy.index.values.min())/np.timedelta64(1,'D')
 
-# --- subset over "current" and "future" periods
+# --- subset over "historical" and "future" periods
 cclimy = climy.loc[(climy.index.values >= cper_start) & (climy.index.values <= cper_end)].stack(level=0)
 fclimy = climy.loc[(climy.index >=fper_start) & (climy.index <= fper_end)].stack(level=0)
 
@@ -147,7 +147,7 @@ for i, col in enumerate(['ptot','pet','runoff','rech']):
     vmax = max(cclimy[col].max(),fclimy[col].max())
     bins = np.linspace(vmin,vmax,10)
     # histograms 
-    cclimy[col].hist(ax=axs[0,i],color='grey',bins=bins,grid=False,alpha=0.8,label='current')
+    cclimy[col].hist(ax=axs[0,i],color='grey',bins=bins,grid=False,alpha=0.8,label='historical')
     fclimy[col].hist(ax=axs[0,i],color='darkred',bins=bins,grid=False,alpha=0.5, label='future')
     # boxplot 
     medianprops = dict(color='black')
@@ -185,7 +185,7 @@ for i,cm_id in enumerate(cm_df.index):
     scclimy = climy.loc[(climy.index.values>cper_start) & (climy.index.values< cper_end),(cm_id,slice(None))].stack(level=0)
     sfclimy = climy.loc[(climy.index>fper_start) & (climy.index< fper_end),(cm_id,slice(None))].stack(level=0)
     # histogram
-    scclimy[col].hist(ax=axs[0,i], bins=bins, color='grey', grid=False,alpha=0.8,label='current')
+    scclimy[col].hist(ax=axs[0,i], bins=bins, color='grey', grid=False,alpha=0.8,label='historical')
     sfclimy[col].hist(ax=axs[0,i], bins=bins, color='darkred', grid=False,alpha=0.8,label='future')
     axs[0,i].set_title(f'CM {cm_id}')
     # boxplot 
@@ -233,7 +233,7 @@ fyrs  = pd.DataFrame({'rech' : frech_qs,
                       'year' : [ idx[0].year for idx in fqs_idx]
                       }, index=qs_labels)
 
-simyrs = pd.concat([cyrs,fyrs],keys=['current','future'])
+simyrs = pd.concat([cyrs,fyrs],keys=['historical','future'])
 
 simyrs.to_csv('simyrs.csv')
 
