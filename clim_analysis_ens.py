@@ -235,6 +235,5 @@ fyrs  = pd.DataFrame({'rech' : frech_qs,
 
 simyrs = pd.concat([cyrs,fyrs],keys=['current','future'])
 
-simyrs.to_excel('simyrs.xlsx')
 simyrs.to_csv('simyrs.csv')
 

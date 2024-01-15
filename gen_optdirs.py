@@ -46,7 +46,7 @@ qyrs['quant'] = qyrs.index.get_level_values(1)
 qyrs['sim_dir'] = qyrs.apply(lambda x: f'sim_{x.quant}_{x.year}_{x.cm}' ,axis=1)
 
 # keep only median years
-qyrs = qyrs.loc[(slice(None),'Q50'),:]
+qyrs = qyrs.loc[(slice(None),['Q10','Q90']),:]
 
 # generate simulation dir for each year of interest 
 # NOTE : pastp is now updated on runtime during preproc

@@ -26,7 +26,7 @@ ogdates = { odic['locnme']:pd.to_datetime(odic['dates_out'].split('|')) for odic
 
 # iteration id for posterior distribution 
 pt_id = pst.control_data.noptmax
-pt_id = 7
+pt_id = 4
 
 # ---------------------------------------------
 # load prior and last iteration observation ensembles  
@@ -201,7 +201,7 @@ def get_og_ts(oe,onames,odates, trans):
     ts.index = odates 
     return(ts)
 
-def plot_tseries_ensembles(pr_oe, pt_oe, obswns, ognmes, ogdates, trans=None):
+def plot_tseries_ensembles(pr_oe, pt_oe, obswns, ognmes, ogdates, trans=None, ylabel=''):
     # get the observation data from the control file and select 
     obs = pst.observation_data.copy()
     fig,axes = plt.subplots(len(ognmes),1,sharex=True,figsize=(10,10))
@@ -224,10 +224,10 @@ def plot_tseries_ensembles(pr_oe, pt_oe, obswns, ognmes, ogdates, trans=None):
         # plot measured+noise 
         if obswns is not None :
             ts = get_og_ts(obswns,onames,odates,trans=trans)
-            ts.plot(ax=ax,color='blue',lw=0.5,alpha=0.5,legend=False)
+            ts.plot(ax=ax,color='blue',lw=0.5,alpha=0.25,legend=False)
         ax.plot(odates, oobs.obsval.apply(trans).values,color="black",lw=1)
         ax.set_title(og,loc="left")
-        ax.set_ylabel('River discharge [m$^3$/s]')
+        ax.set_ylabel(ylabel)
         lpr = Line2D([0], [0], label='Sim. prior', color='grey')
         lpt = Line2D([0], [0], label='Sim. posterior', color='red')
         lbase = Line2D([0], [0], label='Sim. base', color='green')
@@ -242,27 +242,26 @@ def plot_tseries_ensembles(pr_oe, pt_oe, obswns, ognmes, ogdates, trans=None):
 # gaging stations
 gstations = ['P7250001','P7270001','P8215010','P8284010']
 
-fig = plot_tseries_ensembles(pr_oe, pt_oe, obswns , gstations, ogdates,trans=lambda x : 10**x)
-fig.savefig(os.path.join('pproc','pr_pt_qsimobs.pdf'),dpi=300)
+fig = plot_tseries_ensembles(pr_oe, pt_oe, obswns , gstations, ogdates,trans=lambda x : 10**x, ylabel='River discharge [m$^3$/s]')
+fig.savefig(os.path.join('pproc','pr_pt_qsimobs.png'),dpi=300)
 
-fig = plot_tseries_ensembles(None, pt_oe, obswns , gstations, ogdates,trans=lambda x : 10**x)
-fig.savefig(os.path.join('pproc','pt_qsimobs.pdf'),dpi=300)
+fig = plot_tseries_ensembles(None, pt_oe, obswns , gstations, ogdates,trans=lambda x : 10**x, ylabel='River discharge [m$^3$/s]')
+fig.savefig(os.path.join('pproc','pt_qsimobs.png'),dpi=300)
 
-fig = plot_tseries_ensembles(None, fpt_oe, obswns , gstations, ogdates,trans=lambda x : 10**x)
-fig.savefig(os.path.join('pproc','fpt_qsimobs.pdf'),dpi=300)
-
+fig = plot_tseries_ensembles(None, fpt_oe, obswns , gstations, ogdates,trans=lambda x : 10**x, ylabel='River discharge [m$^3$/s]')
+fig.savefig(os.path.join('pproc','fpt_qsimobs.png'),dpi=300)
 
 # selection of observation wells 
 obswells = ['07333X0027','07345X0023','07346X0017','07346X0083','07574X0014']
 
-fig = plot_tseries_ensembles(pr_oe, pt_oe, obswns , obswells, ogdates,trans=lambda x : x)
-fig.savefig(os.path.join('pproc','pr_pt_hsimobs.pdf'),dpi=300)
+fig = plot_tseries_ensembles(pr_oe, pt_oe, obswns , obswells, ogdates,trans=lambda x : x, ylabel='Water level [m NGF]')
+fig.savefig(os.path.join('pproc','pr_pt_hsimobs.png'),dpi=300)
 
-fig = plot_tseries_ensembles(None, pt_oe, obswns , obswells, ogdates,trans=lambda x : x)
-fig.savefig(os.path.join('pproc','pt_hsimobs.pdf'),dpi=300)
+fig = plot_tseries_ensembles(None, pt_oe, obswns , obswells, ogdates,trans=lambda x : x, ylabel='Water level [m NGF]')
+fig.savefig(os.path.join('pproc','pt_hsimobs.png'),dpi=300)
 
-fig = plot_tseries_ensembles(None, fpt_oe, obswns , obswells, ogdates,trans=lambda x : x)
-fig.savefig(os.path.join('pproc','fpt_hsimobs.pdf'),dpi=300)
+fig = plot_tseries_ensembles(None, fpt_oe, obswns , obswells, ogdates,trans=lambda x : x, ylabel='Water level [m NGF]')
+fig.savefig(os.path.join('pproc','fpt_hsimobs.png'),dpi=300)
 
 
 # ---------------------------------------------
@@ -323,7 +322,7 @@ fig.savefig(os.path.join('pproc','rsd.pdf'),dpi=300)
 print(f'Optimum number of best realizations is: {np.argmin(dvals)}')
 
 # final ensemble selection 
-ffpt_oe = spt_oe.iloc[:11]
+ffpt_oe = spt_oe.iloc[:16] # set to 15 after examination of rsd.pdf
 ffpt_ids = ffpt_oe.index
 ffpt_pe = pt_pe.loc[ffpt_ids]
 
@@ -336,11 +335,11 @@ ffpt_oe._df.index = ffpt_oe.index.str.replace(center_real,'base')
 ffpt_pe.to_csv('cal_lizonne.ffpt.par.csv')
 
 # plot final filtered ensemble 
-fig = plot_tseries_ensembles(None, ffpt_oe, obswns , gstations, ogdates,trans=lambda x : 10**x)
-fig.savefig(os.path.join('pproc','ffpt_qsimobs.pdf'),dpi=300)
+fig = plot_tseries_ensembles(None, ffpt_oe, obswns , gstations, ogdates,trans=lambda x : 10**x, ylabel='River discharge [m$^3$/s]')
+fig.savefig(os.path.join('pproc','ffpt_qsimobs.png'),dpi=300)
 
-fig = plot_tseries_ensembles(None, ffpt_oe, obswns , obswells, ogdates,trans=lambda x : x)
-fig.savefig(os.path.join('pproc','ffpt_hsimobs.pdf'),dpi=300)
+fig = plot_tseries_ensembles(None, ffpt_oe, obswns , obswells, ogdates,trans=lambda x : x, ylabel='Water level [m NGF]')
+fig.savefig(os.path.join('pproc','ffpt_hsimobs.png'),dpi=300)
 
 # ---------------------------------------------
 # parameters evolution  
@@ -506,6 +505,7 @@ fig.savefig(os.path.join('pproc','phi_vs_soil_param.pdf'),dpi=300)
 # ---------------------------------------------
 # extract realization
 # ---------------------------------------------
+'''
 # best real
 real = pt_oe.index[pt_oe.phi_vector.argmin()]
 # user defined real
@@ -539,4 +539,4 @@ shutil.copy('chasim.out',os.path.join(tpl_sim_dir,'chasim.out.cal'))
 
 # copying the final filtered posterior parameter ensemble (it will constitute the par stack for MOU)
 shutil.copy('cal_lizonne.ffpt.par.csv',os.path.join(tpl_sim_dir,'cal_lizonne.ffpt.par.csv'))
-
+'''
