@@ -442,8 +442,8 @@ fig.colorbar(ax.get_children()[0],cax=cbar_ax, orientation='horizontal', label='
 fig.savefig(os.path.join('pproc',f'kneepoint_rivpumpfac_map.pdf'),dpi=300)
 
 #====================================================
-#=> plot aquifer constraints
+#=> plot aquifer constraints for single real
 #====================================================
 
-# to do !
+# run pproc_opt.py
 
