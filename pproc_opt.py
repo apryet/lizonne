@@ -147,13 +147,13 @@ for locnme in loc_list :
     lax.axhline(y=doe_df.loc[locnme]['alerte'], color='gold', lw=0.8, ls='--')
     lax.axhline(y=doe_df.loc[locnme]['renforce'], color='orange',lw=0.8, ls='--')
     lax.axhline(y=doe_df.loc[locnme]['crise'], color='red',lw=0.8, ls='--')
-    # plot bars in background (bar widths of 7 days)
+    # plot bars in background (bar widths of 1 days)
     bax.bar(qalerts_df.index, qalerts_df.loc[:,('alerte',locnme)].astype(int),
-            color='gold',width=7,align='center',alpha=0.5,label='Alerte')
+            color='gold',width=1,align='center',alpha=0.5,label='Alerte')
     bax.bar(qalerts_df.index,qalerts_df.loc[:,('renforce',locnme)].astype(int),
-            color='orange',align='center',width=7, alpha=0.5,label='Alerte renforcée')
+            color='orange',align='center',width=1, alpha=0.5,label='Alerte renforcée')
     bax.bar(qalerts_df.index,qalerts_df.loc[:,('crise',locnme)].astype(int),
-            color='red',align='center',width=7, alpha=0.5,label='Crise')
+            color='red',align='center',width=1, alpha=0.5,label='Crise')
     bax.set_ylim(0,1)
     bax.set_yticks([])
     bax.legend(loc='upper right')
