@@ -2,7 +2,7 @@
 #mac
 .DS_Store
 *~
-
+.swp
 
 # Marthe output files 
 bilandeb.txt

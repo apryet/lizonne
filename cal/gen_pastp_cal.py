@@ -29,55 +29,10 @@ for l in range(mm.nlay):
 mm.get_outcrop().plot(cmap='tab20', masked_values=[-9999])
 plt.show()
 '''
-# -----------------------------------------------------------
-#  simplify soil map 
-# -----------------------------------------------------------
-
-# original soil zones map
-zonep_org = MartheField('zonep','Lizonne.zonep_org',mm,use_imask=False)
-zs2d_org = zonep_org.as_3darray()[0,:,:]
-
-# convert to shapefile and reload 
-zonep_org_shp = os.path.join('figs','zonep_org.shp')
-zonep_org.to_shapefile(zonep_org_shp,layer=0)
-zonep_org_gdf = gpd.read_file(zonep_org_shp)
 
 # load basin outline 
 basin_shp = os.path.join('..','data','SIG','BassinLizonne.shp')
 basin_gdf = gpd.read_file(basin_shp)
-
-# plot original soil zones + basin
-fig, ax = plt.subplots(figsize=(5,4))
-ax=zonep_org_gdf.plot(ax=ax, column='val', legend=True, categorical=True)
-ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
-fig.savefig(os.path.join('figs','zonep_org.png'), dpi=300)
-
-# discard undesired soil zones 
-keep_zone_values = [2,8]
-zonep2d_simp = zs2d_org.copy()
-zonep2d_simp[~np.isin(zonep2d_simp,keep_zone_values)]=np.nan
-
-# fill gaps with nearest neighbor
-from scipy import ndimage as nd
-ind = nd.distance_transform_edt(np.isnan(zonep2d_simp), return_distances=False, return_indices=True)
-zonep2d_simp = zonep2d_simp[tuple(ind)]
-
-# write MartheField with simplified soil zones
-zonep3d_simp =  zonep_org.as_3darray()
-zonep3d_simp[0,:,:] = zonep2d_simp
-zonep_simp = MartheField('zonep',zonep3d_simp,mm,use_imask=False)
-zonep_simp.write_data()
-
-# convert to shapefile and reload 
-zonep_simp_shp = os.path.join('figs','zonep_simp.shp')
-zonep_simp.to_shapefile(zonep_simp_shp,layer=0)
-zonep_simp_gdf = gpd.read_file(zonep_simp_shp)
-
-# plot simplified soil zones + basin
-fig, ax = plt.subplots(figsize=(5,4))
-ax=zonep_simp_gdf.plot(ax=ax, column='val', legend=True, categorical=True)
-ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
-fig.savefig(os.path.join('figs','zonep_simp.png'), dpi=300)
 
 # -----------------------------------------------------------
 # load pumping data  
@@ -192,13 +147,13 @@ for l in sorted(aq_gdf.layer.unique()):
                                      color=geol_color_dic[l],
                                      edgecolor='black',
                                      linewidths=0.5,
-                                     markersize=10,
+                                     markersize=14,
                                      label=geol_id_dic[l],
                                      ax=ax)
 
-ax.legend(title='Aquifère')
+ax.legend(title='Aquifer',frameon=False,fontsize=7)
 fig.savefig(os.path.join('figs','qaq.png'),dpi=300)
-
+ax_map=ax
 
 # --------------------------------------------
 # -- well/cell match
@@ -308,6 +263,9 @@ ax.set_ylabel('Prélèvements sout. [m$^3$/mois]')
 plt.gcf().autofmt_xdate()
 fig.savefig(os.path.join('figs','qsout_records.png'),dpi=300)
 
+# copy gw withdrawal
+dff_gw = dff
+
 # ===========================================================
 # ------ processing surface water withdrawals ---------------
 # ===========================================================
@@ -349,6 +307,13 @@ simriv_shp = os.path.join('gis','sim_riv.shp')
 riv_mf.to_shapefile(simriv_shp,epsg=2154)
 simriv_gdf = gpd.read_file(simriv_shp)
 
+# load cleaned shapefile with Qgis (without northern reach)
+simriv_gdf = gpd.read_file(os.path.join('gis','sim_riv_clean.shp'))
+
+# load full river network
+
+fullriv_gdf = gpd.read_file(os.path.join('..','data','SIG','Cours-Eau_BDTopage.shp'))
+
 # --------------------------------------------
 # -- plot map of river pumping stations 
 # --------------------------------------------
@@ -364,18 +329,22 @@ basin_gdf = gpd.read_file(basin_shp)
 fig, ax = plt.subplots(figsize=(5,4))
 ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
 
+# plot actual river network
+ax=fullriv_gdf.plot(ax=ax,color='royalblue',alpha=1,linewidth=0.25)
+
 # plot simulated river network
 ax=simriv_gdf.plot(ax=ax,color='darkblue',alpha=0.5)
+
 
 # plot with distinct marker by layer
 for u in sorted(riv_gdf.Usage.unique()):
     riv_gdf.loc[riv_gdf.Usage==u].plot(marker=marker_dic[u],
                                      color=color_dic[u],
-                                     markersize=10,
+                                     markersize=14,
                                      label=u,
                                      ax=ax)
 
-ax.legend(title='Usages')
+ax.legend(frameon=False,fontsize=7)
 
 fig.savefig(os.path.join('figs','qriv.png'),dpi=300)
 
@@ -458,6 +427,8 @@ plt.gcf().autofmt_xdate()
 ax.set_ylabel('Prélèvements surf. [m$^3$/mois]')
 fig.savefig(os.path.join('figs','qsurf_records.png'),dpi=300)
 
+dff_surf=dff
+
 # --------------------------------------------
 # -- write monthly files of river withdrawals
 # --------------------------------------------
@@ -480,7 +451,7 @@ for m in months:
     # write to csv
     dft[['XCC','YCC','V']].to_csv(qfilename, sep='\t', header=False, index=False, float_format='%.6f')
 
-# ===========================================================
+# ==========================================================
 # -- write .pastp file (thanks @ebuscarlet and @jpvergnes)
 # ===========================================================
 
@@ -549,6 +520,95 @@ with open(pastp_file, 'w', encoding='ISO-8859-1') as f:
   
 
 # -----------------------------------------------------------
+#  write surface and groundwater withdrawals over cal period
+# -----------------------------------------------------------
+
+dff_gw = dff_gw.loc[dff_gw.index>sim_start]
+dff_surf = dff_surf.loc[dff_surf.index>sim_start]
+
+fig, axs = plt.subplots(2,1, sharex=True,figsize=(6,3))
+ax1,ax2=axs
+
+ax1 = dff_gw.groupby(['use'],axis=1).sum()[['AEP','IRRIGATION']].plot.bar(
+    stacked=True,
+    color=['darkblue','darkorange','darkgreen'],
+    ax=ax1)
+# Make most of the ticklabels empty so the labels don't get too crowded
+ticklabels = ['']*len(dff.index)
+# Every 12th ticklabel includes the year
+ticklabels[::12] = [item.strftime('%m-%Y') for item in dff.index[::12]]
+ax1.xaxis.set_major_formatter(ticker.FixedFormatter(ticklabels))
+ax1.set_ylabel('[m$^3$/month]')
+ax1.set_title('Groundwater withdrawals')
+plt.gcf().autofmt_xdate()
+
+
+ax2 = dff_surf.groupby(['use'],axis=1).sum()[['INDUSTRIEL','STEP','IRRIGATION','AEP']].plot.bar(
+        stacked=True,
+        color = ['darkorange','darkgrey','darkgreen','blue'],
+        ax=ax2)
+ticklabels = ['']*len(dff.index)
+ticklabels[::12] = [item.strftime('%m-%Y') for item in dff.index[::12]]
+ax2.xaxis.set_major_formatter(ticker.FixedFormatter(ticklabels))
+plt.gcf().autofmt_xdate()
+ax2.set_ylabel('[m$^3$/month]')
+ax2.set_title('Surface withdrawals')
+fig.tight_layout()
+
+fig.savefig(os.path.join('figs','q_surf_gw_records.png'),dpi=300)
+
+
+# -----------------------------------------------------------
+#  simplify soil map 
+# -----------------------------------------------------------
+
+# original soil zones map
+zonep_org = MartheField('zonep','Lizonne.zonep_org',mm,use_imask=False)
+zs2d_org = zonep_org.as_3darray()[0,:,:]
+
+# convert to shapefile and reload 
+zonep_org_shp = os.path.join('figs','zonep_org.shp')
+zonep_org.to_shapefile(zonep_org_shp,layer=0)
+zonep_org_gdf = gpd.read_file(zonep_org_shp)
+
+# plot original soil zones + basin
+fig, ax = plt.subplots(figsize=(5,4))
+ax=zonep_org_gdf.plot(ax=ax, column='val', legend=True, categorical=True)
+ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
+fig.savefig(os.path.join('figs','zonep_org.png'), dpi=300)
+
+# discard undesired soil zones 
+keep_zone_values = [2,8]
+zonep2d_simp = zs2d_org.copy()
+zonep2d_simp[~np.isin(zonep2d_simp,keep_zone_values)]=np.nan
+
+# fill gaps with nearest neighbor
+from scipy import ndimage as nd
+ind = nd.distance_transform_edt(np.isnan(zonep2d_simp), return_distances=False, return_indices=True)
+zonep2d_simp = zonep2d_simp[tuple(ind)]
+
+# write MartheField with simplified soil zones
+zonep3d_simp =  zonep_org.as_3darray()
+zonep3d_simp[0,:,:] = zonep2d_simp
+zonep_simp = MartheField('zonep',zonep3d_simp,mm,use_imask=False)
+zonep_simp.write_data()
+
+# convert to shapefile and reload 
+zonep_simp_shp = os.path.join('figs','zonep_simp.shp')
+zonep_simp.to_shapefile(zonep_simp_shp,layer=0)
+zonep_simp_gdf = gpd.read_file(zonep_simp_shp)
+
+# plot simplified soil zones + basin
+fig, ax = plt.subplots(figsize=(5,4))
+ax=fullriv_gdf.plot(ax=ax,color='black',alpha=1,linewidth=0.25)
+ax=zonep_simp_gdf.plot(ax=ax, column='val', legend=True, categorical=True)
+ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
+ax.set_xlim(ax_map.get_xlim())
+ax.set_ylim(ax_map.get_ylim())
+fig.savefig(os.path.join('figs','zonep_simp.png'), dpi=300)
+
+
+# -----------------------------------------------------------
 # plot observation data
 # -----------------------------------------------------------
 # load histo file and convert layer ids to 0-based 
@@ -574,34 +634,49 @@ ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
 # plot simulated river network
 ax=simriv_gdf.plot(ax=ax,color='darkblue',alpha=0.5)
 
+
+
+histo_gdf['label2']= histo_gdf.label.replace(['P8284010', 'P8215010', 'P7250001', 'P7270001'],
+                                       ['Lizonne','Belle','Sauvanie','Pude'])
+
+
+
 # plot river discharge stations 
 histo_gdf.loc[histo_gdf['type']=='Débit_Rivi'].plot(
         marker='^',
         c='red',
         edgecolor='black',
-        markersize=10,
-        label='Station suivi débit',
+        markersize=22,
+        label='River discharge station',
         ax=ax)
-
+'''
 histo_gdf.loc[histo_gdf['type']=='Débit_Rivi'].apply(
         lambda x: ax.annotate(
-            text=x.label,
+            text=x.label2,
             xy=(x.geometry.x,x.geometry.y),
-            xytext=(3,0),textcoords='offset points',
+            xytext=(3,-2),textcoords='offset points',
             ha='left',
             va='center',
-            fontsize=7),
+            fontsize=10),
         axis=1)
+'''
+ss_obs_cal = ['07574X0014', '07345X0017', '07338X0017', '07338X0016', '07346X0083', '07345X0023', '07333X0027', '07346X0017']
+histo_gdf = histo_gdf.loc[ss_obs_cal]
 
 # plot head observations with distinct color by layer
 for l,group in histo_gdf.loc[histo_gdf['type']=='Charge'].groupby('layer'):
     group.plot(marker='o',
                c=geol_color_dic[l],
                edgecolor='black',
-               markersize=10,
+               markersize=22,
                label=geol_id_dic[l],
                ax=ax)
 
-ax.legend(title='Type')
+ax.legend(title='',frameon=False,fontsize=7)
+
 
 fig.savefig(os.path.join('figs','obs.png'),dpi=300)
+
+# -----------------------------------------------------------
+# plot observation data
+# -----------------------------------------------------------
