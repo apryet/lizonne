@@ -82,59 +82,51 @@ fclimy = climy.loc[(climy.index >=fper_start) & (climy.index <= fper_end)].stack
 # cm colors 
 clist = ['darkgreen','red','purple','royalblue']
 
-fig,axs=plt.subplots(4,1,sharex=True,figsize=(12,7))
+fig,axs=plt.subplots(4,1,sharex=True,figsize=(10,7))
 # ---- total precip
 ptot=climy.xs('ptot',1,1)
-ptot.plot(style='+',ax=axs[0],color=clist, alpha=0.5,legend=False)
-ptot.rolling(window=10,center=True).mean().plot(ax=axs[0],color=clist,alpha=0.75,legend=False)
-safrany.ptot.plot(ax=axs[0],style='x',color='orange')
-safrany.ptot.rolling(window=10,center=True).mean().plot(ax=axs[0],color='orange',alpha=0.75,legend=False)
-# fit trend line 
-pfit = np.polyfit(t,tclimy.ptot.values, 1)
-pd.DataFrame({'reg':np.polyval(pfit,t)},index=tclimy.index).plot(ax=axs[0],color='black',ls='--',legend=False)
+ptot.plot(style='+',ax=axs[0],color='black',lw=0.5,ms=3, alpha=0.5,legend=False)
+ptot.mean(axis=1).rolling(window=10,center=True).mean().plot(ax=axs[0],color='tomato',ls='-', lw=2,legend=False)
+safrany.ptot.plot(ax=axs[0],style='x',color='green')
+axs[0].grid(which='both')
 axs[0].set_xticklabels([])
 axs[0].set_ylabel('Ptot [mm/y]')
 
 # ---- total pet
 pet=climy.xs('pet',1,1)
-pet.plot(style='+',ax=axs[1],color=clist, alpha=0.5,legend=False)
-pet.rolling(window=10,center=True).mean().plot(ax=axs[1],color=clist,alpha=0.75,legend=False)
-safrany.pet.plot(ax=axs[1],style='x',color='orange')
-safrany.pet.rolling(window=10,center=True).mean().plot(ax=axs[1],color='orange',alpha=0.75,legend=False)
-# fit trend line 
-pfit = np.polyfit(t,tclimy.pet.values, 1)
-pd.DataFrame({'reg':np.polyval(pfit,t)},index=tclimy.index).plot(ax=axs[1],color='black',ls='--',legend=False)
+pet.plot(style='+',ax=axs[1],color='black',lw=0.5,ms=3, alpha=0.5,legend=False)
+pet.mean(axis=1).rolling(window=10,center=True).mean().plot(ax=axs[1],color='tomato',ls='-', lw=2,legend=False)
+safrany.pet.plot(ax=axs[1],style='x',color='green')
+axs[1].grid(which='both')
 axs[1].set_xticklabels([])
 axs[1].set_ylabel('ETP [mm/y]')
 
 # ---- runoff
 runoff=climy.xs('runoff',1,1)
-runoff.plot(style='+',ax=axs[2],color=clist, alpha=0.5,legend=False)
-runoff.rolling(window=10,center=True).mean().plot(ax=axs[2],color=clist,alpha=0.75,legend=False)
-# fit trend line 
-pfit = np.polyfit(t,tclimy.runoff.values, 1)
-pd.DataFrame({'reg':np.polyval(pfit,t)},index=tclimy.index).plot(ax=axs[2],color='black',lw=1.5,ls='--',legend=False)
+runoff.plot(style='+',ax=axs[2],color='black',lw=0.5,ms=3, alpha=0.5,legend=False)
+runoff.mean(axis=1).rolling(window=10,center=True).mean().plot(ax=axs[2],color='tomato',ls='-', lw=2,legend=False)
+axs[2].grid(which='both')
+axs[2].set_xticklabels([])
 axs[2].set_ylabel('Runoff [mm/y]')
 
 # ---- recharge
 rech=climy.xs('rech',1,1)
-rech.plot(style='+',ax=axs[3],color=clist, alpha=0.5,legend=False)
-rech.rolling(window=10,center=True).mean().plot(ax=axs[3],color=clist,alpha=0.75,legend=False)
-# fit trend line 
-pfit = np.polyfit(t,tclimy.rech.values, 1)
-pd.DataFrame({'reg':np.polyval(pfit,t)},index=tclimy.index).plot(ax=axs[3],color='black',lw=1.5,ls='--',legend=False)
+rech.plot(style='+',ax=axs[3],color='black',lw=0.5,ms=3, alpha=0.5,legend=False)
+rech.mean(axis=1).rolling(window=10,center=True).mean().plot(ax=axs[3],color='tomato',ls='-', lw=2,legend=False)
+axs[3].grid(which='both')
 axs[3].set_ylabel('Recharge [mm/y]')
+axs[3].set_xlabel('')
 
 for ax in axs:
-    ax.axvline(pd.to_datetime(rcp_start),alpha=0.5,ls=':',color='black')
+    ax.axvline(pd.to_datetime(rcp_start),alpha=0.5,lw=1.5,ls=':',color='black')
     ax.axvspan(cper_start,cper_end,color='grey',alpha=0.3)
     ax.axvspan(fper_start,fper_end,color='grey',alpha=0.3)
 
-lls =  [ Line2D([0], [0], label=f'DRIAS CM.{i+1}', marker='+', color=c) for i,c in enumerate(clist)]
-lls += [Line2D([0], [0], label='SAFRAN', linestyle=None,marker='x', color='orange')]
-lls += [Line2D([0], [0], label='trend',linestyle='--', color='black')]
-fig.legend(handles=lls,loc='upper center',ncols=6)
-
+lls =  [ Line2D([0], [0], label=f'Climate models', marker='+', linestyle='', color='black',alpha=0.5)]
+lls += [Line2D([0], [0], label='Multi-model 10-year moving average',linestyle='-', color='tomato')]
+lls += [Line2D([0], [0], label='SAFRAN', linestyle='',marker='x', color='green')]
+fig.legend(handles=lls,loc='upper center',ncols=6,facecolor='white', framealpha=1)
+fig.tight_layout()
 fig.savefig(os.path.join('figs','long_term_records.pdf'),dpi=300)
 
 # ---------- plot histograms and box plot for all scenarios ------------
@@ -153,13 +145,15 @@ for i, col in enumerate(['ptot','pet','runoff','rech']):
     medianprops = dict(color='black')
     meanprops = dict(linestyle=None,marker='+', markeredgecolor='black', markerfacecolor='black')
     data = [fclimy[col].values, cclimy[col].values]
+    flierprops = dict(marker='.', markersize=2,alpha=0.5)
     bplots = axs[1,i].boxplot(data,vert=False,
                             widths=0.4,
-                            whis=(0.05,95),
+                            whis=(5,95),
                             showmeans=True,
                             medianprops=medianprops,
                             meanprops=meanprops,
-                            patch_artist=True
+                            patch_artist=True,
+                            flierprops=flierprops
                             )
     for patch, color in zip(bplots['boxes'], ['darkred','grey']):
         patch.set_facecolor(color)
@@ -168,50 +162,10 @@ for i, col in enumerate(['ptot','pet','runoff','rech']):
     axs[1,i].set_xlabel(f'{col} [mm/y]')
 
 axs[0,0].legend(loc='upper left')
-axs[1,0].set_yticklabels(['fut','cur.'])
+axs[1,0].set_yticklabels(['fut','hist.'])
 fig.tight_layout()
 
 fig.savefig(os.path.join('figs','cf_allvars.pdf'),dpi=300)
-
-
-# --- plot histogram and box plots of recharge for each scenario ------------
-
-fig, axs = plt.subplots(2,4, figsize=(9, 4), sharex=True, # Common x-axis
-                       gridspec_kw={"height_ratios": (.7, .3)})
-col='rech'
-
-for i,cm_id in enumerate(cm_df.index):
-    # subset to periods and single climate models (cm_id)
-    scclimy = climy.loc[(climy.index.values>cper_start) & (climy.index.values< cper_end),(cm_id,slice(None))].stack(level=0)
-    sfclimy = climy.loc[(climy.index>fper_start) & (climy.index< fper_end),(cm_id,slice(None))].stack(level=0)
-    # histogram
-    scclimy[col].hist(ax=axs[0,i], bins=bins, color='grey', grid=False,alpha=0.8,label='historical')
-    sfclimy[col].hist(ax=axs[0,i], bins=bins, color='darkred', grid=False,alpha=0.8,label='future')
-    axs[0,i].set_title(f'CM {cm_id}')
-    # boxplot 
-    medianprops = dict(color='black')
-    meanprops = dict(linestyle=None,marker='+', markeredgecolor='black', markerfacecolor='black')
-    data = [sfclimy[col].values, scclimy[col].values]
-    bplots = axs[1,i].boxplot(data,vert=False,
-                            widths=0.4,
-                            whis=(0.05,95),
-                            showmeans=True,
-                            medianprops=medianprops,
-                            meanprops=meanprops,
-                            patch_artist=True
-                            )
-    axs[1,i].set_yticklabels(['fut','cur.'])
-    # fill with colors
-    colors = ['darkred','grey']
-    for patch, color in zip(bplots['boxes'], colors):
-        patch.set_facecolor(color)
-        patch.set_alpha(0.8)
-    axs[1,i].set_xlabel('Recharge [mm/y]')
-
-axs[0,0].legend(loc='upper left')
-fig.tight_layout()
-
-fig.savefig(os.path.join('figs',f'cf_rech_cms.pdf'),dpi=300)
 
 # --- identify deciles of interest
 
@@ -223,7 +177,7 @@ frech_qs = [np.quantile(fclimy.rech,q) for q in qs ]
 cqs_idx = [ cclimy.index[np.argmin(np.abs(cclimy.rech - rech))] for rech in crech_qs]
 fqs_idx = [ fclimy.index[np.argmin(np.abs(fclimy.rech - rech))] for rech in frech_qs]
 
-qs_labels = ['Q10','Q50','Q90']
+qs_labels = ['Q5','Q50','Q95']
 cyrs  = pd.DataFrame({'rech' : crech_qs,
                       'cm'   : [ idx[1] for idx in cqs_idx],
                       'year' : [ idx[0].year for idx in cqs_idx]

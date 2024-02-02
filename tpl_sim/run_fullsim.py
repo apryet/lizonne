@@ -26,7 +26,7 @@ sim_days = pd.date_range(sim_start, sim_end, freq='D')
 
 
 cm_id = int(os.getcwd().split('_')[-1])
-cm_df = pd.read_excel('clim_models.xlsx',index_col=0)
+cm_df = pd.read_excel(os.path.join('..','..','data','DRIAS_Lizonne','clim_models.xlsx'),index_col=0)
 gcm = cm_df.loc[cm_id,'GCM']
 rcm = cm_df.loc[cm_id,'RCM']
 
@@ -71,11 +71,11 @@ with open(pastp_file, 'w', encoding='ISO-8859-1') as f:
         if (date.month==8 and date.day==1):
             f.write('  /RECHARGE/ZONE_CLIM      Z=      *V=         0;\n')
             if date < pd.to_datetime('2005-08-01'):
-                f.write(f'  /METEO_PLUIE/FICHIER   N: DRIAS_Lizonne/{gcm}/{rcm}/historical/prtotAdjust_{gcm}_{rcm}_MF-ADAMONT-SAFRAN-1980-2011_historical_day_{date.year}_{date.year+1}\n')
-                f.write(f'  /METEO_ETP/FICHIER     N: DRIAS_Lizonne/{gcm}/{rcm}/historical/evspsblpotAdjust_Hg0175_{gcm}_{rcm}_MF-ADAMONT-SAFRAN-1980-2011_historical_day_{date.year}_{date.year+1}\n')
+                f.write(f'  /METEO_PLUIE/FICHIER   N: ../../data/DRIAS_Lizonne/{gcm}/{rcm}/historical/prtotAdjust_{gcm}_{rcm}_MF-ADAMONT-SAFRAN-1980-2011_historical_day_{date.year}_{date.year+1}\n')
+                f.write(f'  /METEO_ETP/FICHIER     N: ../../data/DRIAS_Lizonne/{gcm}/{rcm}/historical/evspsblpotAdjust_Hg0175_{gcm}_{rcm}_MF-ADAMONT-SAFRAN-1980-2011_historical_day_{date.year}_{date.year+1}\n')
             else : 
-                f.write(f'  /METEO_PLUIE/FICHIER     N: DRIAS_Lizonne/{gcm}/{rcm}/rcp85/prtotAdjust_{gcm}_{rcm}_MF-ADAMONT-SAFRAN-1980-2011_rcp85_day_{date.year}_{date.year+1}\n')
-                f.write(f'  /METEO_ETP/FICHIER       N: DRIAS_Lizonne/{gcm}/{rcm}/rcp85/evspsblpotAdjust_Hg0175_{gcm}_{rcm}_MF-ADAMONT-SAFRAN-1980-2011_rcp85_day_{date.year}_{date.year+1}\n')
+                f.write(f'  /METEO_PLUIE/FICHIER     N: ../../data/DRIAS_Lizonne/{gcm}/{rcm}/rcp85/prtotAdjust_{gcm}_{rcm}_MF-ADAMONT-SAFRAN-1980-2011_rcp85_day_{date.year}_{date.year+1}\n')
+                f.write(f'  /METEO_ETP/FICHIER       N: ../../data/DRIAS_Lizonne/{gcm}/{rcm}/rcp85/evspsblpotAdjust_Hg0175_{gcm}_{rcm}_MF-ADAMONT-SAFRAN-1980-2011_rcp85_day_{date.year}_{date.year+1}\n')
             f.write('  /FLUX_PLUV/FICH_METE     N=      *\n')
             f.write('  /FLUX_ETP/FICH_METE      N=      *\n')
             f.write('  /CALCUL_HDYNAM/ACTIO     I= 2;\n')
