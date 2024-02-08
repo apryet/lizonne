@@ -99,7 +99,7 @@ pet.mean(axis=1).rolling(window=10,center=True).mean().plot(ax=axs[1],color='tom
 safrany.pet.plot(ax=axs[1],style='x',color='green')
 axs[1].grid(which='both')
 axs[1].set_xticklabels([])
-axs[1].set_ylabel('ETP [mm/y]')
+axs[1].set_ylabel('PET [mm/y]')
 
 # ---- runoff
 runoff=climy.xs('runoff',1,1)

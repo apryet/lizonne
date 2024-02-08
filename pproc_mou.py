@@ -215,7 +215,6 @@ def read_dv_pop(csvfile):
             )
     return(dv_pop.T)
 
-
 # plot rivpump factors 
 fig,axs=plt.subplots(3,1,figsize=(8,8))
 for l,ax in zip([1,3,5],axs):
@@ -444,6 +443,141 @@ fig.colorbar(ax.get_children()[0],cax=cbar_ax, orientation='horizontal', label='
 
 fig.savefig(os.path.join('pproc',f'kneepoint_rivpumpfac_map.pdf'),dpi=300)
 
+#====================================================
+# plot aquifer constraints
+#====================================================
+
+# ---  uncertainties on gw levels in pumped cells derived from par stack at 1st iteration
+
+# load hist file to get aqpump data
+histo_df = marthe_utils.read_histo_file('Lizonne.histo')
+aqpumpcells = histo_df.loc[histo_df.index.str.startswith('aqpump')]
+aqpumpcells.index= aqpumpcells.label.apply(lambda x: x.split('_')[1]).astype(int)
+aqpumpcells.index.name='node'
+
+# load obs stack
+obs_pop = pd.read_csv('mou_lizonne.0.obs_stack.csv')
+h_pop = obs_pop.loc[:,obs_pop.columns.str.startswith('h_')].copy()
+h_pop.index.name='real'
+# re-index with nodes and time steps 
+nodes, tsteps=h_pop.columns.str.extract(r'h_(\d*)_n(\d*)').T.values
+h_pop.columns=pd.MultiIndex.from_frame(pd.DataFrame(
+    {'tstep':tsteps.astype(int),'node':nodes.astype(int)}))
+
+# multiindex df with time series
+h = h_pop.T.unstack()
+
+# std of min h over obs stack 
+hmin = h.loc[520:].min() # here, the min is on the time series
+hstd = hmin.groupby(level='node').std()
+hstd = pd.DataFrame({'std':hstd}).merge(aqpumpcells[['x','y','layer']],left_index=True,right_index=True)
+
+axs = hstd.hist(column='std',by='layer')
+axs[0,0].figure.savefig(os.path.join('pproc','uncert_hist.pdf'),dpi=300)
+
+# convert 
+hstd_gdf = gpd.GeoDataFrame(hstd,
+                       geometry = gpd.points_from_xy(hstd.x, 
+                                                     hstd.y),
+                       crs = 2154)
+
+# load basin outline 
+basin_shp = os.path.join('..','data','SIG','BassinLizonne.shp')
+basin_gdf = gpd.read_file(basin_shp)
+
+# plot map
+fig,axs=plt.subplots(1,3,figsize=(8,5))
+vmin,vmax= 0,round(hstd['std'].max(),-1) # round
+for i,l in enumerate([2,4,6]):
+    ax=hstd_gdf.loc[hstd_gdf.layer==l].plot(marker='o',
+                                     column='std',
+                                       vmin=vmin,
+                                       vmax=vmax,
+                                     edgecolor='black',
+                                     ax=axs[i])
+    #ax.legend(title=f'Layer {l}',frameon=False,fontsize=7)
+    ax = basin_gdf.boundary.plot(ax=ax,color='black')    
+    ax.set_title(f'Layer {l}')
+
+fig.tight_layout()
+cax = fig.add_axes([0.25,0.2,0.4,0.03])
+fig.colorbar(axs[0].get_children()[0],cax,orientation='horizontal', label='std of min sim. head [m]')
+
+fig.savefig(os.path.join('pproc','uncert_maps.pdf'),dpi=300)
+
+
+# --- plot series of gw levels (heads) at pumped aquifer cells (where constraints apply) 
+
+# load constraints on h
+aqpumplim_df = pd.read_csv('aqpump_lim.csv',index_col=0)
+hmin = aqpumplim_df['hmin'].copy() # here, the min is the constraint value
+hmin.index = [int(x.split('_')[1]) for x in hmin.index]
+hmin.index.name = 'node'
+
+# load obs stack
+gen = ngen
+#obs_pop = pd.read_csv('mou_lizonne.{gen}.archive.obs_pop.csv')
+obs_pop = pd.read_csv(f'mou_lizonne.{gen}.chance.obs_pop.csv')
+h_pop = obs_pop.loc[:,obs_pop.columns.str.startswith('h_')].copy()
+h_pop.index.name='real'
+
+# re-index with nodes and time steps 
+nodes, tsteps=h_pop.columns.str.extract(r'h_(\d*)_n(\d*)').T.values
+h_pop.columns=pd.MultiIndex.from_frame(pd.DataFrame(
+    {'tstep':tsteps.astype(int),'node':nodes.astype(int)}))
+
+# multiindex df with time series
+h = h_pop.T.unstack()
+
+# distance to hmin (neg if constraint is not satisfied)
+dh = h.sub(hmin,level='node')
+
+# identify nodes were constraint is not satisfied from tstep=520 (after initialization)
+n_nonfeas_reals = (dh.loc[dh.index>520].min(axis=0) < 0).groupby('node').sum()
+infeasible_cells = n_nonfeas_reals.loc[n_nonfeas_reals>0].index
+
+print(f'WARNING: {infeasible_cells} infeasible cells were found')
+
+# plot on multi-page pdf 
+from matplotlib.backends.backend_pdf import PdfPages
+filename = os.path.join('pproc','constraints.pdf')
+figsize=(8, 10.5)
+nr, nc = 4, 2
+
+# list of pumped aquifer nodes (cell id)
+nodes = h.columns.get_level_values(1).unique()
+
+figs = []
+ax_count = 0
+print('Generating figures...')
+for n in nodes:
+    # new figure (pdf page)
+    if ax_count % (nr * nc) == 0:
+        ax_count = 0
+        fig, ax_mat = plt.subplots(nr, nc,figsize=figsize)
+        axs=ax_mat.ravel()
+    # new ax (plot)
+    ax = axs.ravel()[ax_count]
+    ax = h.loc[:,(slice(None),n)].plot(ax=ax,legend=False)
+    l=aqpumpcells.loc[n,'layer']
+    ax.set_title(f'cell {n} - layer {l}')
+    ax.axhline(hmin.loc[n],c='grey',ls='--')
+    ax.axvline(520,c='grey',ls='--')
+    ax.set_xlabel('')
+    ax_count += 1
+    # save fig
+    if ax_count == nr*nc-1 :
+        fig.tight_layout()
+        figs.append(fig)
+
+print('Writing pdf...')
+with PdfPages(filename) as pdf:
+    for fig in figs:
+        pdf.savefig(fig)
+        plt.close(fig)
+
+
+# run pproc_opt.py
 #====================================================
 #=> plot aquifer constraints for single real
 #====================================================

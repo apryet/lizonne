@@ -1,4 +1,4 @@
-import os 
+import os, shutil
 import numpy as np
 import pandas as pd 
 import pymarthe
@@ -85,6 +85,11 @@ def opt_pastp():
     rcm = cm_df.loc[cm_id,'RCM']
     sim_start = pd.to_datetime(str(year-2)+'-08-01')
     sim_end = pd.to_datetime(str(year)+'-12-31')
+    # copy files 
+    if os.path.exists('DRIAS_Lizonne'):
+        shutil.rmtree('DRIAS_Lizonne')
+    shutil.copytree(os.path.join('..','data','DRIAS_Lizonne',f'{gcm}',f'{rcm}'),os.path.join('DRIAS_Lizonne',f'{gcm}',f'{rcm}'))
+    # generate pastpfile 
     pastp_file = 'Lizonne.pastp'
     write_pastp(pastp_file, sim_start, sim_end, gcm, rcm)
 

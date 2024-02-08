@@ -65,10 +65,12 @@ mfs.load_field('CHARGE')
 # get steady state simulated heads (option #1)
 h0 = mfs.data['CHARGE'][0].data['value']
 
-# get mean of transient heads (option #2)
+# get min of transient heads (option #2)
+# => cells will be considered as confined if they are always confined
+# => this leads to less restrictive constraints
 isteps = list(mfs.data['CHARGE'].keys())[2:]
 hs = np.stack([mfs.data['CHARGE'][i].data['value'] for i in isteps])
-href=hs.mean(axis=0)
+href=hs.min(axis=0)
 
 # load geometry as 1D array
 #top, botm = _top.flatten('F'), _hsubs.flatten('F')
@@ -488,14 +490,6 @@ par.loc[dvpars,'parubnd']=10
 par.loc[dvpars,'parval1']=0.
 par.loc[dvpars,'partrans']='none'
 
-'''
-# -- adjusting cm parameter settings
-par.loc['cm','parlbnd']=cm_df.index.min()
-par.loc['cm','parubnd']=cm_df.index.max()
-par.loc['cm','parval1']=1
-par.loc['cm','partrans']='none'
-'''
-                 
 # -- adjustable model  parameter bounds 
 ies_pst = pyemu.Pst(os.path.join('..','master_ies',f'cal_lizonne.pst'))
 ies_par = ies_pst.parameter_data 
@@ -521,13 +515,10 @@ hobs['date'] = hobs.rec_id.apply(lambda x : prn_df.index[x])
 obs.loc[hobs.loc[hobs.date<opt_start].index,'weight']=0
 
 # set 0-weight to head of pumping cell offending constraints with 0 pumping.
-discard_locs = ['08656','18427','18428', '19029','19109','19505','20198','20514','20609','20976'] 
+#discard_locs = ['08656','18427','18428', '19029','19109','19505','20198','20514','20609','20976'] 
+discard_locs = ['18899','19505','30123']
 for loc in discard_locs:
     obs.loc[obs.obgnme=='g_pcellh_'+loc,'weight']=0
-
-# should now disable pumping in these cells to avoid unconstrained pumping !
-
-
 
 # ---------------------------------------------
 # --- draw dv population   --------------------
@@ -536,11 +527,10 @@ for loc in discard_locs:
 # NOTE : unsure whether pestpp considers values of calibrated parameter values 
 # so it may not be necessary to provide them in the dv pop file. 
 
-
 # dv population size (twice the number of dv)
 num_dvpars = 2*dvpars.shape[0]
 print(f'Number of dv : {num_dvpars}')
-num_reals=1* 116 # adjusted as a multiple of available cores (116)
+num_reals=1*116 # adjusted as a multiple of available cores (116)
 print(f'Size of dv population : {num_reals}')
 
 # set all parameters fixed and release dvpars 
@@ -548,7 +538,9 @@ par.loc[:,'partrans'] = 'fixed'
 par.loc[dvpars,'partrans'] = 'none'
 
 # temporarily lower the decision variable upper bounds
-par.loc[dvpars,'parubnd'] = 1.0
+par.loc[dvpars,'parubnd'] = 0.33
+# lower the factor for aquifer pumping to avoid unsatisfied constraints (infeasible solutions)
+#par.loc[par.index.str.startswith('aqpumpfac'),'parubnd'] = 0.33
 
 # generate initial dv ensemble by uniform draw and save to csv 
 dvpop = pyemu.ParameterEnsemble.from_uniform_draw(pst,num_reals=num_reals)
@@ -625,8 +617,6 @@ pst.write(pst_name)
 # ---------------------------------------------
 # -------- run PEST with reference conditions -
 # ---------------------------------------------
-
 pyemu.os_utils.run('pestpp-mou mou_lizonne_fac0.pst')
 pyemu.os_utils.run('pestpp-mou mou_lizonne_fac1.pst')
-
 
