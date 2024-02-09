@@ -26,7 +26,7 @@ ogdates = { odic['locnme']:pd.to_datetime(odic['dates_out'].split('|')) for odic
 
 # iteration id for posterior distribution 
 pt_id = pst.control_data.noptmax
-pt_id = 4
+pt_id = 3
 
 # ---------------------------------------------
 # load prior and last iteration observation ensembles  
@@ -299,10 +299,36 @@ def get_sharpness(pt_oe,pr_oe=None):
 qt_lb=0.05
 qt_ub=0.95
 
+# --- plot reliability and sharpness through iterations  
+
+nit = phi.shape[0]
+
+rvals,svals,dvals=[],[],[]
+for i in range(nit):
+    # load ensemble of simulated observations at IES iteration i
+    ioe = pyemu.ObservationEnsemble.from_csv(pst=pst,filename=os.path.join(f"{case}.{i}.obs.csv"))
+    # compute sharpness and reliability considering all subset
+    r=get_reliability(ioe,obswns.loc['base'])
+    s= get_sharpness(ioe,pr_oe)
+    d = np.sqrt((1-r)**2+(1-s)**2)
+    rvals.append(r)
+    svals.append(s)
+    dvals.append(d)
+
+fig,ax=plt.subplots(1,1,figsize=(6,4))
+ax.plot(rvals,'--+', color='royalblue',label='reliability')
+ax.plot(svals,'--+', color='darkgreen',label='sharpness')
+ax.plot(dvals,'-', color='black', label='distance to optimum')
+ax.legend()
+fig.savefig(os.path.join('pproc','rsd_through_iter.pdf'),dpi=300)
+
+
+# --- plot reliability and sharpness through final filtered ensemble size   
+
 # posterior observation ensemble sorted by decreasing phi
 spt_oe = fpt_oe.loc[fpt_oe.phi_vector.sort_values(ascending=False).index]
 
-# compute distance to optimum (r=1,s=1)
+# compute distance to optimum (r=1,s=1) to get optimum ffpt ensemble size
 rvals,svals,dvals=[],[],[]
 for n in range(spt_oe.shape[0]):
     r=get_reliability(pt_oe.iloc[:n+1],obswns.loc['base'])
@@ -317,12 +343,15 @@ ax.plot(rvals,'--+', color='royalblue',label='reliability')
 ax.plot(svals,'--+', color='darkgreen',label='sharpness')
 ax.plot(dvals,'-', color='black', label='distance to optimum')
 ax.legend()
-fig.savefig(os.path.join('pproc','rsd.pdf'),dpi=300)
+fig.savefig(os.path.join('pproc','rsd_through_nreals.pdf'),dpi=300)
 
-print(f'Optimum number of best realizations is: {np.argmin(dvals)}')
+# optimum size for the final filtered posterior ensemble
+nreals_ffpt_ens=np.argmin(dvals)
+
+print(f'Optimum number of best realizations is: {nreals_ffpt_ens}')
 
 # final ensemble selection 
-ffpt_oe = spt_oe.iloc[:16] # set to 15 after examination of rsd.pdf
+ffpt_oe = spt_oe.iloc[:nreals_ffpt_ens] # set to nreals_ffpt_ens after examination of rsd.pdf
 ffpt_ids = ffpt_oe.index
 ffpt_pe = pt_pe.loc[ffpt_ids]
 
