@@ -52,11 +52,11 @@ pst = pyemu.Pst('mou_lizonne.pst')
 
 # pareto archive summary
 pasum_df = pd.read_csv('mou_lizonne.pareto.archive.summary.csv')
-#feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
-feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1, axis=1),:]
+feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
+#feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1, axis=1),:]
 
-#ngen = feas_front_df.generation.unique().shape[0]
-ngen=10
+ngen = feas_front_df.generation.unique().shape[0]
+#ngen=11
 
 cmap = matplotlib.colormaps.get_cmap('gist_heat').reversed()
 
@@ -514,68 +514,71 @@ hmin = aqpumplim_df['hmin'].copy() # here, the min is the constraint value
 hmin.index = [int(x.split('_')[1]) for x in hmin.index]
 hmin.index.name = 'node'
 
-# load obs stack
-gen = ngen
-#obs_pop = pd.read_csv('mou_lizonne.{gen}.archive.obs_pop.csv')
-obs_pop = pd.read_csv(f'mou_lizonne.{gen}.chance.obs_pop.csv')
-h_pop = obs_pop.loc[:,obs_pop.columns.str.startswith('h_')].copy()
-h_pop.index.name='real'
+def plot_constraints_tseries(obs_pop_file, gen):
+    obs_pop = pd.read_csv(obs_pop_file) 
+    h_pop = obs_pop.loc[:,obs_pop.columns.str.startswith('h_')].copy()
+    h_pop.index.name='real'
 
-# re-index with nodes and time steps 
-nodes, tsteps=h_pop.columns.str.extract(r'h_(\d*)_n(\d*)').T.values
-h_pop.columns=pd.MultiIndex.from_frame(pd.DataFrame(
-    {'tstep':tsteps.astype(int),'node':nodes.astype(int)}))
+    # re-index with nodes and time steps 
+    nodes, tsteps=h_pop.columns.str.extract(r'h_(\d*)_n(\d*)').T.values
+    h_pop.columns=pd.MultiIndex.from_frame(pd.DataFrame(
+        {'tstep':tsteps.astype(int),'node':nodes.astype(int)}))
 
-# multiindex df with time series
-h = h_pop.T.unstack()
+    # multiindex df with time series
+    h = h_pop.T.unstack()
 
-# distance to hmin (neg if constraint is not satisfied)
-dh = h.sub(hmin,level='node')
+    # distance to hmin (neg if constraint is not satisfied)
+    dh = h.sub(hmin,level='node')
 
-# identify nodes were constraint is not satisfied from tstep=520 (after initialization)
-n_nonfeas_reals = (dh.loc[dh.index>520].min(axis=0) < 0).groupby('node').sum()
-infeasible_cells = n_nonfeas_reals.loc[n_nonfeas_reals>0].index
+    # identify nodes were constraint is not satisfied from tstep=520 (after initialization)
+    n_nonfeas_reals = (dh.loc[dh.index>520].min(axis=0) < 0).groupby('node').sum()
+    infeasible_cells = n_nonfeas_reals.loc[n_nonfeas_reals>0].index
 
-print(f'WARNING: {infeasible_cells} infeasible cells were found')
+    print(f'WARNING: {infeasible_cells} infeasible cells were found at generation {gen}')
 
-# plot on multi-page pdf 
-from matplotlib.backends.backend_pdf import PdfPages
-filename = os.path.join('pproc','constraints.pdf')
-figsize=(8, 10.5)
-nr, nc = 4, 2
+    # plot on multi-page pdf 
+    from matplotlib.backends.backend_pdf import PdfPages
+    filename = os.path.join('pproc',f'constraints_{gen}.pdf')
+    figsize=(8, 10.5)
+    nr, nc = 4, 2
 
-# list of pumped aquifer nodes (cell id)
-nodes = h.columns.get_level_values(1).unique()
+    # list of pumped aquifer nodes (cell id)
+    nodes = h.columns.get_level_values(1).unique()
 
-figs = []
-ax_count = 0
-print('Generating figures...')
-for n in nodes:
-    # new figure (pdf page)
-    if ax_count % (nr * nc) == 0:
-        ax_count = 0
-        fig, ax_mat = plt.subplots(nr, nc,figsize=figsize)
-        axs=ax_mat.ravel()
-    # new ax (plot)
-    ax = axs.ravel()[ax_count]
-    ax = h.loc[:,(slice(None),n)].plot(ax=ax,legend=False)
-    l=aqpumpcells.loc[n,'layer']
-    ax.set_title(f'cell {n} - layer {l}')
-    ax.axhline(hmin.loc[n],c='grey',ls='--')
-    ax.axvline(520,c='grey',ls='--')
-    ax.set_xlabel('')
-    ax_count += 1
-    # save fig
-    if ax_count == nr*nc-1 :
-        fig.tight_layout()
-        figs.append(fig)
+    figs = []
+    ax_count = 0
+    print(f'Generating figures for generation {gen}...')
+    for n in nodes:
+        # new figure (pdf page)
+        if ax_count % (nr * nc) == 0:
+            ax_count = 0
+            fig, ax_mat = plt.subplots(nr, nc,figsize=figsize)
+            axs=ax_mat.ravel()
+        # new ax (plot)
+        ax = axs.ravel()[ax_count]
+        ax = h.loc[:,(slice(None),n)].plot(ax=ax,legend=False)
+        l=aqpumpcells.loc[n,'layer']
+        ax.set_title(f'cell {n} - layer {l}')
+        ax.axhline(hmin.loc[n],c='grey',ls='--')
+        ax.axvline(520,c='grey',ls='--')
+        ax.set_xlabel('')
+        ax_count += 1
+        # save fig
+        if ax_count == nr*nc-1 :
+            fig.tight_layout()
+            figs.append(fig)
 
-print('Writing pdf...')
-with PdfPages(filename) as pdf:
-    for fig in figs:
-        pdf.savefig(fig)
-        plt.close(fig)
+    print('Writing pdf...')
+    with PdfPages(filename) as pdf:
+        for fig in figs:
+            pdf.savefig(fig)
+            plt.close(fig)
 
+
+obs_pop_file = 'mou_lizonne.0.obs_pop.chance.csv'
+plot_constraints_tseries(obs_pop_file,0)
+obs_pop_file = f'mou_lizonne.{ngen-1}.chance.obs_pop.csv'
+plot_constraints_tseries(obs_pop_file,ngen-1)
 
 # run pproc_opt.py
 #====================================================

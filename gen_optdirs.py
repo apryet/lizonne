@@ -72,5 +72,8 @@ for cm_id, year, sim_dir in zip(qyrs.cm, qyrs.year, qyrs.sim_dir):
     istep = int(np.argwhere(mm.mldates==sim_start))
     hinit= mfs.data['CHARGE'][istep]
     hinit.write_data('Lizonne.charg')
+    os.chdir(sim_dir)
+    os.system('python mou_setup.py > mou_setup.log &')
+    os.chdir('..')
     
 

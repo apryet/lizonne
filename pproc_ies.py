@@ -319,6 +319,7 @@ fig,ax=plt.subplots(1,1,figsize=(6,4))
 ax.plot(rvals,'--+', color='royalblue',label='reliability')
 ax.plot(svals,'--+', color='darkgreen',label='sharpness')
 ax.plot(dvals,'-', color='black', label='distance to optimum')
+ax.set_xlabel('IES iterations')
 ax.legend()
 fig.savefig(os.path.join('pproc','rsd_through_iter.pdf'),dpi=300)
 
@@ -342,6 +343,7 @@ fig,ax=plt.subplots(1,1,figsize=(6,4))
 ax.plot(rvals,'--+', color='royalblue',label='reliability')
 ax.plot(svals,'--+', color='darkgreen',label='sharpness')
 ax.plot(dvals,'-', color='black', label='distance to optimum')
+ax.set_xlabel('Number of realizations in the final filtered posterior ensemble')
 ax.legend()
 fig.savefig(os.path.join('pproc','rsd_through_nreals.pdf'),dpi=300)
 
@@ -357,8 +359,8 @@ ffpt_pe = pt_pe.loc[ffpt_ids]
 
 # identify new base (center) obs realization from normalized distance to mean, and update index 
 center_real = (ffpt_oe - ffpt_oe.mean()).div(ffpt_oe.mean()).apply(np.linalg.norm, axis=1).idxmin()
-ffpt_pe._df.index = ffpt_pe.index.str.replace(center_real,'base')
-ffpt_oe._df.index = ffpt_oe.index.str.replace(center_real,'base')
+ffpt_pe._df.index = ffpt_pe.index.str.replace(center_real,'ffpt_center')
+ffpt_oe._df.index = ffpt_oe.index.str.replace(center_real,'ffpt_center')
 
 # write final parameter ensemble 
 ffpt_pe.to_csv('cal_lizonne.ffpt.par.csv')
@@ -374,15 +376,13 @@ fig.savefig(os.path.join('pproc','ffpt_hsimobs.png'),dpi=300)
 # parameters evolution  
 # ---------------------------------------------
 
-'''
 dic_props = dict(color = 'k', lw =  0.5)
 meanprops = dict(marker = 'o', mfc = 'none', ms = 3, lw = 0.5, mec = 'k')
 flierprops = dict(marker = 'o', mfc = 'none', ms = 3, lw = 0.1, mec = 'k')
 
 def plot_multviolins(ens_list, ax, showpoints=False):
-    # boxplot
     bplot = ax.boxplot(ens_list, widths = 0.4, showbox = True, showcaps = False, 
-                showmeans = True, showfliers = False, boxprops = dic_props, 
+                showmeans = True, showfliers = False, boxprops = dic_props,
                 whiskerprops = dic_props, capprops = dic_props, medianprops = dic_props, 
                 meanprops = meanprops, flierprops = flierprops)
     # violin plot (white)
@@ -455,8 +455,6 @@ fig.tight_layout()
 fig.savefig(os.path.join('pproc',f'evol_other_params.pdf'),dpi=300)
 plt.close(fig)
 
-'''
-
 # ---------------------------------------------
 # parameters pt - pr distributions 
 # ---------------------------------------------
@@ -505,36 +503,9 @@ for i,prefix in enumerate(pfs):
 fig.savefig(os.path.join('pproc','pr_pt_hist_surf.pdf'),dpi=300)
 
 
-# cross-plot parameter vs phi values 
-
-'''
-# 0-th iteration (prior) phi
-pr_pe_df['phi'] = phi.iloc[0][pr_pe_df.index] 
-# last iteration (posterior) phi
-pt_pe_df['phi'] = phi.iloc[-1][pt_pe_df.index] 
-
-sparams = ['cap_sol_progr', 'equ_ruis_perc', 't_demi_percol']
-
-fig, axs = plt.subplots(2, len(sparams), figsize=(10,6))
-
-for i,par in enumerate(sparams):
-    axs[0,i].scatter(pr_pe_df[par],pr_pe_df['phi'])
-    axs[0,i].set_xlabel(par)
-    axs[0,i].set_yscale('log')
-    axs[0,i].set_ylabel('phi')
-    axs[1,i].scatter(pt_pe_df[par],pt_pe_df['phi'])
-    axs[1,i].set_xlabel(par)
-    axs[1,i].set_ylabel('phi')
-    axs[1,i].set_yscale('log')
-
-fig.tight_layout()
-
-fig.savefig(os.path.join('pproc','phi_vs_soil_param.pdf'),dpi=300)
-'''
 # ---------------------------------------------
 # extract realization
 # ---------------------------------------------
-'''
 # best real
 real = pt_oe.index[pt_oe.phi_vector.argmin()]
 # user defined real
@@ -544,23 +515,23 @@ pst.control_data.noptmax=0
 pst.write(f'caleval_r{real}_it{pt_id}_best.pst')
 
 # write pst with posterior base pe
-real = 'base'
-par_set = ffpt_pe.loc['base']
+real = 'ffpt_center'
+par_set = ffpt_pe.loc[real]
 pst.parameter_data.loc[par_set.index,'parval1']=par_set.values
 pst.control_data.noptmax=0
-pst.write('caleval_base_ffpt.pst')
+pst.write('caleval_ffpt_center.pst')
 
 # run pest with center real from final filtered posterior ensemble (ffpt)
-pyemu.os_utils.run('pestpp-ies caleval_base_ffpt.pst')
+pyemu.os_utils.run('pestpp-ies caleval_ffpt_center.pst')
 
 # copy model files with center filtered posterior real to sim dir
 tpl_sim_dir = os.path.join('..','tpl_sim')
 
 # post-proc center real
 print('post processing center realization...')
-exec(open('pproc.py').read())
+exec(open('../pproc_cal.py').read())
 
-print('Copying model files of base real to {tpl_sim_dir}')
+print('Copying model files of center real to {tpl_sim_dir}')
 for f in glob.glob("Lizonne.*"): shutil.copy(f, tpl_sim_dir)
 
 # copying the calibration heads (they will be used to define the constraints on gw level)
@@ -568,4 +539,3 @@ shutil.copy('chasim.out',os.path.join(tpl_sim_dir,'chasim.out.cal'))
 
 # copying the final filtered posterior parameter ensemble (it will constitute the par stack for MOU)
 shutil.copy('cal_lizonne.ffpt.par.csv',os.path.join(tpl_sim_dir,'cal_lizonne.ffpt.par.csv'))
-'''

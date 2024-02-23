@@ -516,7 +516,8 @@ obs.loc[hobs.loc[hobs.date<opt_start].index,'weight']=0
 
 # set 0-weight to head of pumping cell offending constraints with 0 pumping.
 #discard_locs = ['08656','18427','18428', '19029','19109','19505','20198','20514','20609','20976'] 
-discard_locs = ['18899','19505','30123']
+
+discard_locs = ['08656']
 for loc in discard_locs:
     obs.loc[obs.obgnme=='g_pcellh_'+loc,'weight']=0
 
@@ -530,7 +531,7 @@ for loc in discard_locs:
 # dv population size (twice the number of dv)
 num_dvpars = 2*dvpars.shape[0]
 print(f'Number of dv : {num_dvpars}')
-num_reals=1*116 # adjusted as a multiple of available cores (116)
+num_reals=2*116 # adjusted as a multiple of available cores (116)
 print(f'Size of dv population : {num_reals}')
 
 # set all parameters fixed and release dvpars 
@@ -538,7 +539,7 @@ par.loc[:,'partrans'] = 'fixed'
 par.loc[dvpars,'partrans'] = 'none'
 
 # temporarily lower the decision variable upper bounds
-par.loc[dvpars,'parubnd'] = 0.33
+par.loc[dvpars,'parubnd'] = 0.50
 # lower the factor for aquifer pumping to avoid unsatisfied constraints (infeasible solutions)
 #par.loc[par.index.str.startswith('aqpumpfac'),'parubnd'] = 0.33
 

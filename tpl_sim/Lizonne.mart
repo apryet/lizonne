@@ -375,12 +375,12 @@
          0=[Option supplémentaire 2]
          0=[Option supplémentaire 3]
  *** Initialisation avant calcul                     ***
-    /CAP_SOL_PROGR/ZONE_SOL  Z=      2V=1.5294E+02;
-    /EQU_RUIS_PERC/ZONE_SOL  Z=      2V=3.6200E+02;
-    /T_DEMI_PERCOL/ZONE_SOL  Z=      2V=3.7301E+00;
+    /CAP_SOL_PROGR/ZONE_SOL  Z=      2V=2.1175E+02;
+    /EQU_RUIS_PERC/ZONE_SOL  Z=      2V=4.1327E+02;
+    /T_DEMI_PERCOL/ZONE_SOL  Z=      2V=6.2897E+00;
     /!!!!!/!!!!!
-    /CAP_SOL_PROGR/ZONE_SOL  Z=      8V=2.0924E+02;
-    /EQU_RUIS_PERC/ZONE_SOL  Z=      8V=4.2305E+02;
-    /T_DEMI_PERCOL/ZONE_SOL  Z=      8V=8.8161E+00;
+    /CAP_SOL_PROGR/ZONE_SOL  Z=      8V=1.8568E+02;
+    /EQU_RUIS_PERC/ZONE_SOL  Z=      8V=2.9089E+02;
+    /T_DEMI_PERCOL/ZONE_SOL  Z=      8V=7.4640E+00;
   /*****/***** Fin d'Initialisation
  *** Fin du fichier des Paramètres Généraux          ***

@@ -159,7 +159,7 @@ pst.rectify_pgroups()
 # soil parameters (see sec. 3.4.9 notice Gardenia)
 par.loc[par.parnme.str.startswith('cap_sol_progr'),'parlbnd']=100       # mm
 par.loc[par.parnme.str.startswith('cap_sol_progr'),'parval1']=250  # mm
-par.loc[par.parnme.str.startswith('cap_sol_progr'),'parubnd']=400    # mm
+par.loc[par.parnme.str.startswith('cap_sol_progr'),'parubnd']=350    # mm
 
 par.loc[par.parnme.str.startswith('equ_ruis_perc'),'parlbnd']=100        # mm
 par.loc[par.parnme.str.startswith('equ_ruis_perc'),'parval1']=350    # mm
@@ -167,7 +167,7 @@ par.loc[par.parnme.str.startswith('equ_ruis_perc'),'parubnd']=600     # mm
 
 par.loc[par.parnme.str.startswith('t_demi_percol'),'parlbnd']= 1   # days
 par.loc[par.parnme.str.startswith('t_demi_percol'),'parval1']= 15  # days
-par.loc[par.parnme.str.startswith('t_demi_percol'),'parubnd']= 30  # days
+par.loc[par.parnme.str.startswith('t_demi_percol'),'parubnd']= 25  # days
 
 # unconfined storage (emmli)
 par.loc[par.parnme.str.startswith('emmli'),'parlbnd']=-4   # [-]
@@ -196,10 +196,10 @@ par.loc[par.parnme.str.startswith('permh') & \
 
 # hydraulic conductivity - COST
 par.loc[par.parnme.str.startswith('permh') & \
-        par.parnme.str.contains('l02') ,'parlbnd']=-9  # log10(m/s)
+        par.parnme.str.contains('l02') ,'parlbnd']=-7  # log10(m/s)
 
 par.loc[par.parnme.str.startswith('permh') & \
-        par.parnme.str.contains('l02') ,'parval1']=-5  # log10(m/s)
+        par.parnme.str.contains('l02') ,'parval1']=-4  # log10(m/s)
 
 par.loc[par.parnme.str.startswith('permh') & \
         par.parnme.str.contains('l02') ,'parubnd']=-1  # log10(m/s)
@@ -216,10 +216,10 @@ par.loc[par.parnme.str.startswith('permh') & \
 
 # hydraulic conductivity - TURO
 par.loc[par.parnme.str.startswith('permh') & \
-        par.parnme.str.contains('l04') ,'parlbnd']=-9  # log10(m/s)
+        par.parnme.str.contains('l04') ,'parlbnd']=-7  # log10(m/s)
 
 par.loc[par.parnme.str.startswith('permh') & \
-        par.parnme.str.contains('l04') ,'parval1']=-5  # log10(m/s)
+        par.parnme.str.contains('l04') ,'parval1']=-4  # log10(m/s)
 
 par.loc[par.parnme.str.startswith('permh') & \
         par.parnme.str.contains('l04') ,'parubnd']=-1  # log10(m/s)
@@ -236,10 +236,10 @@ par.loc[par.parnme.str.startswith('permh') & \
 
 # hydraulic conductivity - CE
 par.loc[par.parnme.str.startswith('permh') & \
-        par.parnme.str.contains('l06') ,'parlbnd']=-9  # log10(m/s)
+        par.parnme.str.contains('l06') ,'parlbnd']=-7  # log10(m/s)
 
 par.loc[par.parnme.str.startswith('permh') & \
-        par.parnme.str.contains('l06') ,'parval1']=-5  # log10(m/s)
+        par.parnme.str.contains('l06') ,'parval1']=-4  # log10(m/s)
 
 par.loc[par.parnme.str.startswith('permh') & \
         par.parnme.str.contains('l06') ,'parubnd']=-1  # log10(m/s)
@@ -293,7 +293,6 @@ prior_pe.to_binary('prior_pe.jcb')
 # get observation dataframe with full data (observation dates and types) 
 obs_df = mopt.get_obs_df()
 
-'''
 # take a peek to observation auto-correlation plots
 for locnme in obs_df.locnme.unique(): 
     try :
@@ -335,7 +334,6 @@ for locnme in obs_df.locnme.unique():
 
 obs_cov.to_coo('obs_cov.jcb')
 
-'''
 ## reload saved obs. cov mat
 obs_cov = pyemu.Cov.from_binary('obs_cov.jcb')
 
