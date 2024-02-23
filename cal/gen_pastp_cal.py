@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, glob
 import pandas as pd
 import numpy as np
 import datetime 
@@ -8,8 +8,10 @@ from pymarthe.moptim import MartheOptim
 from pymarthe.mfield import MartheField
 from pymarthe.utils import marthe_utils, shp_utils, pest_utils, pp_utils
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import pyemu
 import geopandas as gpd
+plt.rc('font', family='serif', size=11)
 
 # -----------------------------------------------------------
 # -- Read model
@@ -35,13 +37,38 @@ basin_shp = os.path.join('..','data','SIG','BassinLizonne.shp')
 basin_gdf = gpd.read_file(basin_shp)
 
 # -----------------------------------------------------------
+# load safran data  (just for plotting)
+# -----------------------------------------------------------
+
+def read_var(srcdir, varname):
+    df_list=[]
+    files = [f for f in glob.iglob(os.path.join(srcdir,f'{varname}*'))]
+    for f in files : 
+        df=pd.read_csv(f,delim_whitespace=True,
+                       header=None,index_col=-1,skiprows=1)
+        df.index=pd.to_datetime(df.index,format='%d/%m/%Y')
+        df.index.name='date'
+        df = df.mean(axis=1)
+        df_list.append(df)
+    return(pd.concat(df_list))
+
+# read safran data
+safran_dir = os.path.join('..','data','SAFRAN_Lizonne')
+ptot = read_var(safran_dir,'Plu+Neige')
+pet = read_var(safran_dir,'ETP')
+safran = pd.DataFrame({'ptot':ptot,'pet':pet})
+safranm = safran.groupby(pd.Grouper(freq='MS')).sum().iloc[1:-1,:]
+safrany = safran.groupby(pd.Grouper(freq='Y',)).sum().iloc[1:-1,:]
+
+
+# -----------------------------------------------------------
 # load pumping data  
 # -----------------------------------------------------------
 
 # Read pumping data from excel file 
 pump_data_xls = os.path.join('..','data','prelevements','Prelevements_V3-Lizonne.xlsx')
 
-# selection of years (column names in excel file) for both groundwater and surface withdrawals
+# selection of years (column names in excel1G file) for both groundwater and surface withdrawals
 ycols = [y for y in range(2003,2020)]
 
 # ===========================================================
@@ -168,7 +195,11 @@ dfs.to_excel(os.path.join('..','data','prelevements','corr_forage_cellule_sort.x
 df.set_index(['layer','node'],inplace=True)
 df.sort_index(inplace=True)
 df.to_excel(os.path.join('..','data','prelevements','corr_forage_cellule_idx.xlsx'))
-''' 
+'''
+
+
+
+
 # --------------------------------------------
 # -- temporal disaggregation by months
 # --------------------------------------------
@@ -523,38 +554,45 @@ with open(pastp_file, 'w', encoding='ISO-8859-1') as f:
 #  write surface and groundwater withdrawals over cal period
 # -----------------------------------------------------------
 
-dff_gw = dff_gw.loc[dff_gw.index>sim_start]
-dff_surf = dff_surf.loc[dff_surf.index>sim_start]
+surf_bv = 627*1e6 # km2 to m2
+safranm_ss = safranm.loc[(safranm.index>sim_start) & (safranm.index<sim_end)]
+dff_gw_ss = dff_gw.loc[(dff_gw.index>sim_start) & (dff_gw.index<sim_end)].div(surf_bv)*1000
+dff_surf_ss = dff_surf.loc[(dff_surf.index>sim_start) & (dff_surf.index<sim_end)].div(surf_bv)*1000
 
-fig, axs = plt.subplots(2,1, sharex=True,figsize=(6,3))
-ax1,ax2=axs
+fig, axs = plt.subplots(3,1, sharex=True,figsize=(12,6))
+ax0,ax1,ax2=axs
 
-ax1 = dff_gw.groupby(['use'],axis=1).sum()[['AEP','IRRIGATION']].plot.bar(
-    stacked=True,
-    color=['darkblue','darkorange','darkgreen'],
+# precipitation and evapotranspiration
+ax0 = safranm_ss[['ptot','pet']].plot.bar(legend=False,color=['navy','tan'],ax=ax0)
+# Make most of the ticklabels empty so the labels don't get too crowded
+ax0.xaxis.set_major_formatter(ticker.FixedFormatter(ticklabels))
+ax0.set_ylabel('[mm/month]')
+ax0.set_title('Precipitations and Potential Evapotranspiration')
+ax0.legend(loc='upper right',title=None,labels=['P','PET'])
+
+# groundwater withdrawals
+ax1 = dff_gw_ss.groupby(['use'],axis=1).sum()[['IRRIGATION']].plot.bar(
+    stacked=True, legend=False,
+    color=['darkgreen'],
     ax=ax1)
 # Make most of the ticklabels empty so the labels don't get too crowded
-ticklabels = ['']*len(dff.index)
-# Every 12th ticklabel includes the year
-ticklabels[::12] = [item.strftime('%m-%Y') for item in dff.index[::12]]
 ax1.xaxis.set_major_formatter(ticker.FixedFormatter(ticklabels))
-ax1.set_ylabel('[m$^3$/month]')
+ax1.set_ylabel('[mm/month]')
 ax1.set_title('Groundwater withdrawals')
-plt.gcf().autofmt_xdate()
+ax1.legend(loc='upper right',title=None,labels=['Irrigation'])
 
-
-ax2 = dff_surf.groupby(['use'],axis=1).sum()[['INDUSTRIEL','STEP','IRRIGATION','AEP']].plot.bar(
-        stacked=True,
-        color = ['darkorange','darkgrey','darkgreen','blue'],
+# surface withdrawals
+ax2 = dff_surf_ss.groupby(['use'],axis=1).sum()[['INDUSTRIEL','IRRIGATION','AEP']].plot.bar(
+        stacked=True, legend=False,
+        color = ['darkorange','darkgreen','blue'],
         ax=ax2)
-ticklabels = ['']*len(dff.index)
-ticklabels[::12] = [item.strftime('%m-%Y') for item in dff.index[::12]]
+ticklabels = [d.strftime('%m-%Y') if d.month==1 else '' for d in dff_gw_ss.index]
 ax2.xaxis.set_major_formatter(ticker.FixedFormatter(ticklabels))
-plt.gcf().autofmt_xdate()
-ax2.set_ylabel('[m$^3$/month]')
+ax2.set_ylabel('[mm/month]')
 ax2.set_title('Surface withdrawals')
+ax2.legend(loc='upper right', title=None, labels=['Industrial','Irrigation','Drinking water'])
+plt.gcf().autofmt_xdate()
 fig.tight_layout()
-
 fig.savefig(os.path.join('figs','q_surf_gw_records.png'),dpi=300)
 
 
@@ -677,6 +715,124 @@ ax.legend(title='',frameon=False,fontsize=7)
 
 fig.savefig(os.path.join('figs','obs.png'),dpi=300)
 
-# -----------------------------------------------------------
-# plot observation data
-# -----------------------------------------------------------
+
+# --------------------------------------------
+# -- basic stats
+# --------------------------------------------
+
+# mean annual groundwater withdrawals by use
+aqpump = aq_gdf.groupby('Usage').sum().loc[:,range(2003,2021)].mean(axis=1)
+
+# mean annual river withdrawals by use
+rivpump = riv_gdf.groupby('Usage').sum().loc[:,range(2003,2021)].mean(axis=1)
+rivpump = rivpump.loc[['AEP','INDUSTRIEL','IRRIGATION']] # removing step
+
+# concat
+pump = pd.concat([rivpump,aqpump],keys=['River','Aquifer'],names=['Source','Use'])
+
+# translate
+tr_dic= {'AEP':'Drinking water', 'INDUSTRIEL':'Industrial', 'IRRIGATION':'Irrigation', 'STEP':'Treatment plant'}
+pump.index.set_levels(pump.index.levels[1].map(tr_dic),level=1,inplace=True)
+
+# plot
+fig,ax=plt.subplots(1,1,figsize=(4,7))
+ax=pump.unstack().plot(kind='bar',stacked=True,ax=ax)
+ax.set_ylabel('Pumping [m$^3/y$]')
+ax.set_xticklabels(['River','Aquifer'],rotation=0)
+ax.set_xlabel('')
+fig.tight_layout()
+
+fig.savefig(os.path.join('figs','barplot_withdrawals.png'),dpi=300)
+
+# total pumping 
+pump.sum()
+
+# total pumping, mm over the watershed
+pump.sum()/(627e6)*1000
+
+# distribution by source, relative
+pump.groupby('Source').sum().div(pump.sum())
+
+# distribution, by use, relative
+pump.div(pump.groupby('Source').sum())
+
+
+# --------------------------------------------
+# -- basic stats
+# --------------------------------------------
+
+
+# load DOE data
+doe_file = os.path.join('..','data','DOE','DOE.xlsx')
+doe_df = pd.read_excel(doe_file,index_col='id')
+
+# list of stations 
+loc_list = ['P7250001','P7270001','P8215010','P8284010']
+
+# load obs data for loc_list
+qobs_df_list = []
+for locnme in loc_list :  
+    obsfile = os.path.join('pest', 'obs', f'{locnme}.dat')
+    loc_df = marthe_utils.read_obsfile(obsfile)
+    loc_df.rename(columns={'value':locnme},inplace=True)
+    qobs_df_list.append(loc_df)
+
+qobs_df = pd.concat(qobs_df_list,axis=1)   
+
+# computes number of days under alert.  
+def get_qriv_alerts(q_df):
+    '''
+    Compute days of alerte (alterte, renforce, crise) from q_df
+    '''
+    # identify periods with flow discharge below threshold levels
+    qcrise_df    = q_df.le(doe_df['crise'])
+    qrenforce_df = q_df.le(doe_df['renforce'])*(~qcrise_df)
+    #qalerte_df   = q_df.le(doe_df['alerte'])*(~qrenforce_df)*(~qcrise_df)
+    qalerte_df   = q_df.le(doe_df['alerte']) # alert only
+    # concatenate all types of alerts
+    qalerts_df = pd.concat( [qalerte_df, qrenforce_df, qcrise_df],axis=1,
+                         keys=['alerte','renforce','crise'],
+                         names=['seuil','station']
+                         )
+    # summary of days with alerts (number of time steps where threshold values are met)
+    qalerts_sum = qalerts_df.astype(int).sum().unstack()
+    return(qalerts_df,qalerts_sum)
+
+
+start = pd.to_datetime('2014-07-31')
+idx = qobs_df.index > start
+ss_obs_df = qobs_df.loc[idx]
+
+obs_qalerts_df, obs_qalerts_sum = get_qriv_alerts(ss_obs_df)
+
+# --- plot q records with alerts  
+def plot_indic(yscale='log'):
+    fig,axs=plt.subplots(2,2,sharex=True,figsize=(12,8))
+    for lax, locnme in zip(axs.ravel(),loc_list) :  
+        # plot setup
+        loc_long_name = doe_df.loc[locnme,'nom']
+        lax.set_title(f'{loc_long_name}')
+        bax = lax.twinx()
+        lax.plot(ss_obs_df[locnme], mew=0.7, alpha=1, ms=2, color='blue',label='Observed discharge')
+        lax.set_ylabel('Débit [m$^3$/s]')
+        lax.set_ylim(0,0.5*ss_obs_df[locnme].max())
+        if yscale=='log':
+            lax.set_yscale('log')
+        # plot critical levels 
+        lax.axhline(y=doe_df.loc[locnme]['alerte'], color='orange', lw=1, ls='--',label='Alert threshold')
+        # plot bars in background
+        bax.bar(obs_qalerts_df.index, obs_qalerts_df.loc[:,('alerte',locnme)].astype(int),
+                color='orange',width=2,align='center',alpha=0.3,label='Alerte')
+        bax.set_ylim(0,1)
+        bax.set_yticks([])
+        lax.set_xlim(ss_obs_df[locnme].index.min(),ss_obs_df[locnme].index.max())
+        lax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+        #bax.legend(loc='upper right')
+    handles, labels = lax.get_legend_handles_labels()
+    fig.tight_layout()
+    fig.subplots_adjust(bottom=0.1)
+    fig.legend(handles, labels, loc='lower center',bbox_to_anchor=(0.5,0.0),ncol=2)
+    fig.savefig(os.path.join('figs', f'doe_obs_{yscale}.png'),dpi=300)
+
+#plot_indic(yscale='log')
+plot_indic(yscale='linear')
