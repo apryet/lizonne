@@ -85,8 +85,7 @@ mopt.add_param(parname='emmca', mobj=mm.prop['emmca'],
 mopt.write_kriging_factors(pp_emmca.extract_vgm_range(), parname='emmca', cleanup=False, save_cov=True)
 
 # --- Parameterization of  emmli ---
-# --- parameterization of distributed hydraulic properties (emmli)
-# zpc for all layers except layer 2:"Coniacien-Santonien" (layer_id = 1)
+# zpc for aquitards, pp for aquifer layers e
 print('Parameterize `emmli` field ...')
 
 # initialize emmli field from scratch
@@ -99,7 +98,6 @@ _ = [ iemmli.set_data(-1,layer=i) for i,ep in enumerate(ep_mask) if ep]
 
 # pilot points set up
 pp_emmli = pp_utils.PilotPoints(iemmli)
-#pp_emmli.add_spacing_pp(layer=1, zone=1, xspacing=spacings[1], yspacing=spacings[1])
 
 for l,s in enumerate(spacings):
     # if pp for this layer

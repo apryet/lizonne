@@ -308,7 +308,7 @@ riv_mf.to_shapefile(simriv_shp,epsg=2154)
 simriv_gdf = gpd.read_file(simriv_shp)
 
 # load cleaned shapefile with Qgis (without northern reach)
-simriv_gdf = gpd.read_file(os.path.join('gis','sim_riv_clean.shp'))
+simriv_gdf = gpd.read_file(os.path.join('..','data','SIG','sim_riv_clean.shp'))
 
 # load full river network
 
