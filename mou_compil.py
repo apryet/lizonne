@@ -123,5 +123,32 @@ ax.set_ylabel('Total pumping [m$^3$]')
 fig.tight_layout()
 fig.savefig(os.path.join('figs',f'comp_pareto.pdf'),dpi=300)
 
+# --------------------------------------------------
+# compare pre-defined risk, with risk as an objective 
 
+'''
+fig,ax = plt.subplots(1,1,figsize=(6,5))
+pasum_df = pd.read_csv(os.path.join('pproc_master_simrisk_Q50_1986_7','mou_lizonne.pareto.archive.summary.csv'))
+feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
+gen=feas_front_df.generation.max()
+df = feas_front_df.loc[feas_front_df.generation==gen,:]
+# non-dominated realizations (pareto)
+pax = ax.scatter(df.loc[:,'deficit_tot'],df.loc[:,'tot_pump'],c=df.loc[:,'_risk_'],
+                 cmap='seismic_r',vmin=0,vmax=1, marker='o',ec='black',s=60,label='risk as an objective',alpha=1)
 
+fig.colorbar(pax, label='Reliability')
+
+pasum_df = pd.read_csv(os.path.join('pproc_master_sim_Q50_1986_7','mou_lizonne.pareto.archive.summary.csv'))
+feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
+gen=feas_front_df.generation.max()
+df = feas_front_df.loc[feas_front_df.generation==gen,:]
+feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
+pax = ax.scatter(df.loc[:,'deficit_tot'],df.loc[:,'tot_pump'],c='none',
+                  marker='o',ec='darkgreen',s=60,label='opt_risk=0.66',alpha=1)
+
+ax.set_xlabel('Total river deficit [m$^3$]')
+ax.set_ylabel('Total pumping [m$^3$]')
+fig.tight_layout()
+fig.savefig(os.path.join('figs',f'pareto_risk_as_objective.png'),dpi=300)
+
+'''
