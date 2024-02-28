@@ -87,7 +87,7 @@ fig,axs=plt.subplots(4,1,sharex=True,figsize=(10,7))
 ptot=climy.xs('ptot',1,1)
 ptot.plot(style='+',ax=axs[0],color='black',lw=0.5,ms=3, alpha=0.5,legend=False)
 ptot.mean(axis=1).rolling(window=10,center=True).mean().plot(ax=axs[0],color='tomato',ls='-', lw=2,legend=False)
-safrany.ptot.plot(ax=axs[0],style='x',color='green')
+#safrany.ptot.plot(ax=axs[0],style='x',color='green')
 axs[0].grid(which='both')
 axs[0].set_xticklabels([])
 axs[0].set_ylabel('Ptot [mm/y]')
@@ -96,7 +96,7 @@ axs[0].set_ylabel('Ptot [mm/y]')
 pet=climy.xs('pet',1,1)
 pet.plot(style='+',ax=axs[1],color='black',lw=0.5,ms=3, alpha=0.5,legend=False)
 pet.mean(axis=1).rolling(window=10,center=True).mean().plot(ax=axs[1],color='tomato',ls='-', lw=2,legend=False)
-safrany.pet.plot(ax=axs[1],style='x',color='green')
+#safrany.pet.plot(ax=axs[1],style='x',color='green')
 axs[1].grid(which='both')
 axs[1].set_xticklabels([])
 axs[1].set_ylabel('PET [mm/y]')
@@ -124,7 +124,7 @@ for ax in axs:
 
 lls =  [ Line2D([0], [0], label=f'Climate models', marker='+', linestyle='', color='black',alpha=0.5)]
 lls += [Line2D([0], [0], label='Multi-model 10-year moving average',linestyle='-', color='tomato')]
-lls += [Line2D([0], [0], label='SAFRAN', linestyle='',marker='x', color='green')]
+#lls += [Line2D([0], [0], label='SAFRAN', linestyle='',marker='x', color='green')]
 fig.legend(handles=lls,loc='upper center',ncols=6,facecolor='white', framealpha=1)
 fig.tight_layout()
 fig.savefig(os.path.join('figs','long_term_records.pdf'),dpi=300)
@@ -133,6 +133,8 @@ fig.savefig(os.path.join('figs','long_term_records.pdf'),dpi=300)
 
 fig, axs = plt.subplots(2,4, figsize=(9, 4), sharex='col', # Common x-axis
                        gridspec_kw={"height_ratios": (.7, .3)})
+
+labels_dic = {'ptot':'Ptot','pet':'PET','runoff':'Runoff','rech':'Recharge'}
 
 for i, col in enumerate(['ptot','pet','runoff','rech']):
     vmin = min(cclimy[col].min(),fclimy[col].min())
@@ -159,7 +161,7 @@ for i, col in enumerate(['ptot','pet','runoff','rech']):
         patch.set_facecolor(color)
         patch.set_alpha(0.8)
     axs[1,i].set_yticklabels(['',''])
-    axs[1,i].set_xlabel(f'{col} [mm/y]')
+    axs[1,i].set_xlabel(f'{labels_dic[col]} [mm/y]')
 
 axs[0,0].legend(loc='upper left')
 axs[1,0].set_yticklabels(['fut','hist.'])
