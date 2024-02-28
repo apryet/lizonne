@@ -201,31 +201,35 @@ def get_og_ts(oe,onames,odates, trans):
     ts.index = odates 
     return(ts)
 
-def plot_tseries_ensembles(pr_oe, pt_oe, obswns, ognmes, ogdates, trans=None, ylabel=''):
+def plot_tseries_ensembles(pr_oe, pt_oe, obswns, ognmes, ogdates, trans=None, ylabel='',legend=True ):
     # get the observation data from the control file and select 
     obs = pst.observation_data.copy()
     fig,axes = plt.subplots(len(ognmes),1,sharex=True,figsize=(10,10))
+    if trans==None:
+        trans=[lambda x : x]*len(ognmes)
+    if not type(trans)==list:
+        trans = [trans]*len(ognmes)
     # for each observation group (i.e. timeseries)
-    plot_legend=True
-    for ax,og in zip(axes,ognmes):
+    for ax,og,t in zip(axes,ognmes,trans):
         # get values 
         oobs = obs.loc[obs.obgnme==og.lower(),:].copy()
         onames = oobs.obsnme.values
         odates = ogdates[og]
         # plot prior
         if pr_oe is not None :
-            ts = get_og_ts(pr_oe,onames,odates, trans=trans)
-            ts.plot(ax=ax,color='grey',lw=0.5,alpha=0.5,legend=False)
+            ts = get_og_ts(pr_oe,onames,odates, trans=t)
+            ts.plot(ax=ax,color='grey',lw=0.5,alpha=0.10,legend=False)
         # plot posterior
         if pt_oe is not None :
-            ts = get_og_ts(pt_oe,onames,odates,trans=trans)
-            ts.plot(ax=ax,color='red',lw=0.5,alpha=0.5,legend=False)
-            ts['base'].plot(ax=ax,color='green',lw=1,alpha=0.5,legend=False)
+            ts = get_og_ts(pt_oe,onames,odates,trans=t)
+            ts.plot(ax=ax,color='red',lw=0.5,alpha=0.50,legend=False)
+            ts['base'].plot(ax=ax,color='green',alpha=1,lw=2,legend=False)
         # plot measured+noise 
         if obswns is not None :
-            ts = get_og_ts(obswns,onames,odates,trans=trans)
-            ts.plot(ax=ax,color='blue',lw=0.5,alpha=0.25,legend=False)
-        ax.plot(odates, oobs.obsval.apply(trans).values,color="black",lw=1)
+            ts = get_og_ts(obswns,onames,odates,trans=t)
+            ts.plot(ax=ax,color='blue',lw=0.5,alpha=0.05,legend=False)
+        # plot obs
+        ax.plot(odates, oobs.obsval.apply(t).values,color="black",alpha=1,lw=1)
         ax.set_title(og,loc="left")
         ax.set_ylabel(ylabel)
         lpr = Line2D([0], [0], label='Sim. prior', color='grey')
@@ -233,7 +237,7 @@ def plot_tseries_ensembles(pr_oe, pt_oe, obswns, ognmes, ogdates, trans=None, yl
         lbase = Line2D([0], [0], label='Sim. base', color='green')
         lobs = Line2D([0], [0], label='Observed', color='black')
         lobsn = Line2D([0], [0], label='Obs.+noise', color='blue')
-        if plot_legend:
+        if legend:
             ax.legend(handles=[lpr,lpt,lbase,lobs,lobsn],loc='upper left',ncols=5)
             plot_legend=False
     fig.tight_layout()
@@ -262,6 +266,35 @@ fig.savefig(os.path.join('pproc','pt_hsimobs.png'),dpi=300)
 
 fig = plot_tseries_ensembles(None, fpt_oe, obswns , obswells, ogdates,trans=lambda x : x, ylabel='Water level [m NGF]')
 fig.savefig(os.path.join('pproc','fpt_hsimobs.png'),dpi=300)
+
+#   ---------  selection of the two (article)
+
+locs = ['P8284010','P7250001','07333X0027','07346X0017']
+labels = ['GS1','GS3','PZ1','PZ2']
+units = ['River discharge [m$^3$/s]']*2 + ['Water level [m NGF]']*2
+trans = [lambda x : 10**x,lambda x : 10**x,lambda x : x,lambda x : x]
+
+fig = plot_tseries_ensembles(None, fpt_oe, obswns , locs, ogdates,trans=trans, ylabel='',legend=False)
+
+for ax,unit,label in zip(fig.axes,units,labels):
+    ax.set_ylabel(unit)
+    ax.set_title(label,loc="left")
+
+fig.axes[0].set_ylim(0,45)
+fig.axes[1].set_ylim(0,5)
+#fig.axes[2].set_ylim(80,140)
+#fig.axes[3].set_ylim(100,175)
+
+lpt = Line2D([0], [0], label='Sim. posterior', color='red')
+lbase = Line2D([0], [0], label='Sim. base', color='green')
+lobs = Line2D([0], [0], label='Observed', color='black')
+lobsn = Line2D([0], [0], label='Obs.+noise', color='blue')
+fig.axes[0].legend(handles=[lpt,lbase,lobs,lobsn],loc='upper left',ncols=4)
+fig.axes[0].margins(x=0)
+fig.tight_layout()
+
+fig.savefig(os.path.join('pproc','fpt_q_and_h_simobs.png'),dpi=150)
+
 
 
 # ---------------------------------------------
@@ -454,6 +487,7 @@ for i,prefix in enumerate(pfs):
 fig.tight_layout()
 fig.savefig(os.path.join('pproc',f'evol_other_params.pdf'),dpi=300)
 plt.close(fig)
+
 
 # ---------------------------------------------
 # parameters pt - pr distributions 

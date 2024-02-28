@@ -57,20 +57,52 @@ for i in cm_df.index:
     # all clim data 
     clim = pd.DataFrame({'ptot':ptot,'pet':pet})
     clim = clim.merge(prn_ss,left_index=True, right_index=True)
+    # summer runoff
+    clim['srunoff']=clim.runoff.values.copy()
+    clim.loc[~clim.index.month.isin([6,7,8,9]),'srunoff']=0
     # annual aggregation (remove incomplete 1st and last years)
-    climy = clim.groupby(pd.Grouper(freq='Y')).sum().iloc[1:-1,:]
+    # annual rech of year Y from 1-oct-(Y-1) to 30-sept-(Y)
+    start = pd.Timestamp(f'{clim.index.min().year+1}-10-01')
+    end = pd.Timestamp(f'{clim.index.max().year-1}-10-01')
+    bins = pd.date_range(start,end, freq='12MS')
+    climy = clim.groupby(pd.cut(clim.index, bins=bins)).sum()
+    climy.index=bins[1:] # year Y
     # add to compil dic 
     climy_dic[i]=climy
 
+
+'''
+# test 
+
+dates = pd.date_range('1980-08-01','1983-07-31')
+df = pd.DataFrame({'v':[0]},index=dates)
+
+df.loc['1981-09-01']=1
+df.loc['1981-11-01']=1
+df.loc['1982-01-05']=5
+
+# not effective
+df.groupby(pd.Grouper(freq="12MS", offset="10MS",origin='epoch')).sum()
+
+# effective 
+start = pd.Timestamp(f'{df.index.min().year+1}-10-01')
+end = pd.Timestamp(f'{df.index.max().year-1}-10-01')
+bins = pd.date_range(start,end, freq='12MS')
+dfy = df.groupby(pd.cut(df.index, bins=bins)).sum()
+dfy.index=bins[1:] # year Y
+print(dfy)
+
+'''
+
 # concat to single df 
 climy = pd.concat(climy_dic.values(),keys=climy_dic.keys(),axis=1)
-
+climy.to_csv('climy.csv')
 # subset to fit trend line
 rcp_start= pd.to_datetime('2005-08-01') # rcp start 
 fit_start = rcp_start
 fit_end = pd.to_datetime('2098-12-31')
 
-# subset to fit period and average over 4 cms (!)
+# subset to fit period and average over cms (!)
 tclimy = climy.loc[(climy.index>fit_start) & (climy.index<fit_end)].groupby(level=1,axis=1).mean()
 t= (tclimy.index.values - tclimy.index.values.min())/np.timedelta64(1,'D')
 
@@ -128,6 +160,8 @@ lls += [Line2D([0], [0], label='SAFRAN', linestyle='',marker='x', color='green')
 fig.legend(handles=lls,loc='upper center',ncols=6,facecolor='white', framealpha=1)
 fig.tight_layout()
 fig.savefig(os.path.join('figs','long_term_records.pdf'),dpi=300)
+
+
 
 # ---------- plot histograms and box plot for all scenarios ------------
 
@@ -190,4 +224,25 @@ fyrs  = pd.DataFrame({'rech' : frech_qs,
 simyrs = pd.concat([cyrs,fyrs],keys=['historical','future'])
 
 simyrs.to_csv('simyrs.csv')
+
+
+#---------------------------------------------------------------------
+# ---------- plot scatter runoff against rech ------------
+climy = pd.read_csv('climy.csv',header=[0,1],parse_dates=True)
+fig, ax = plt.subplots(1,2, figsize=(8, 4)) # Common x-axis
+axs[0].scatter(climy.loc[:,(slice(None),'rech')],climy.loc[:,(slice(None),'runoff')],
+           marker='+',c='darkred')
+axs.set_xlabel('Recharge [mm/y]')
+axs[0].set_ylabel('Runoff [mm/y]')
+
+axs[.scatter(climy.loc[:,(slice(None),'rech')],climy.loc[:,(slice(None),'srunoff')],
+           marker='+',c='darkred')
+axs[1].set_xlabel('Recharge [mm/y]')
+axs[1].set_ylabel('Summer Runoff [mm/y]')
+axs[1].set_title('Summer Runoff vs Annual Recharge')
+
+fig.tight_layout()
+
+
+
 

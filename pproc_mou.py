@@ -287,6 +287,97 @@ ax.set_xlabel('Reach id')
 fig.tight_layout()
 fig.savefig(os.path.join('pproc',f'lastgen_rivpumpfac.pdf'),dpi=300)
 
+
+
+# ---------------------------------------------
+# dv of pareto aqpump and rivpump (gen = ngen)
+# ---------------------------------------------
+
+# violin plots 
+dv_pop = read_dv_pop(f'mou_lizonne.archive.dv_pop.csv')
+opt_year = dv_pop.index.levels[2].max()
+dv_pop = dv_pop.loc[slice(None),slice(None),opt_year,slice(None),:]
+
+mmonths = {6:'June',7:'July',8:'August',9:'September'}
+
+# plot aqpump and rivpump factors 
+fig,axs=plt.subplots(1,4,figsize=(8,4),sharey=True)
+for m,ax in zip([6,7,8,9],axs):
+    ens_list = []
+    ptype = 'aq'
+    for l in [1,3,5]:
+        ens_list.append(dv_pop.loc[('aq',l,m)].values.ravel())
+    ens_list.append(dv_pop.loc[('riv',slice(None),m)].values.ravel())
+    ax = plot_multviolins(ens_list, ax)
+    ax.set_xticklabels(['l2','l4','l6','riv'])
+    ax.set_title(mmonths[m])
+
+axs[0].set_ylabel('Factor value [-]')
+fig.tight_layout()
+
+fig.savefig(os.path.join('pproc','evol_aqpump.pdf'),dpi=300)
+#fig.savefig(os.path.join('evol_aqpump.pdf'),dpi=300)
+
+
+# --- plot decorated rivpump factors map
+
+# load shapefile of simulated river network
+simriv_shp = os.path.join('gis','sim_riv.shp')
+simriv_gdf = gpd.read_file(simriv_shp)
+simriv_gdf.set_index(simriv_gdf.val.astype(int),inplace=True)
+
+# load basin outline 
+basin_shp = os.path.join('..','data','SIG','BassinLizonne.shp')
+basin_gdf = gpd.read_file(basin_shp)
+
+# load histo file and convert to gpd
+histo_df = marthe_utils.read_histo_file(mm.mlname+'.histo')
+histo_gdf = gpd.GeoDataFrame(histo_df,
+                       geometry = gpd.points_from_xy(histo_df['x'], 
+                                                     histo_df['y']),
+                       crs = 2154) # EPSG:RGF93
+
+gstations_gdf = histo_gdf.loc[histo_gdf['type']=='Débit_Rivi']
+
+gstations_gdf['label2']= gstations_gdf.label.replace(['P8284010', 'P8215010', 'P7250001', 'P7270001'],
+                                       ['GS1','GS4','GS3','GS2'])
+
+# load factors 
+rivfacvals = dv_pop.loc[('riv',slice(None),slice(None))]
+mrivfacvals = rivfacvals.mean(axis=1).unstack()
+simriv_gdf = simriv_gdf.merge(mrivfacvals,left_index=True, right_index=True)
+
+# plot maps
+fig,axs = plt.subplots(1,4,figsize=(10,3.5))
+for m,ax in zip(mmonths.keys(),axs):
+    # basin outline
+    ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
+    # pumping factors
+    ax = simriv_gdf.plot(ax=ax,column=m,vmin=0,vmax=10)
+    # gaging stations
+    ax = gstations_gdf.plot(marker='^',c='red',
+        edgecolor='black', markersize=22, label='Gaging stations', ax=ax)
+    gstations_gdf.apply(lambda x: ax.annotate(
+        text=x['label2'], xy=x.geometry.coords[0], 
+        xytext=(3, -5), textcoords="offset points",
+        fontsize=6), axis=1)
+    ax.set_title(mmonths[m])
+    ax.axes.get_xaxis().set_visible(False)
+    ax.axes.get_yaxis().set_visible(False)
+
+fig.tight_layout()
+
+# append colorbar
+fig.subplots_adjust(bottom=0.20)
+p0 = axs[0].get_position().get_points().flatten()
+p1 = axs[1].get_position().get_points().flatten()
+p2 = axs[2].get_position().get_points().flatten()
+p3 = axs[3].get_position().get_points().flatten()
+cbar_ax = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.03]) # (left, bottom, width, height)
+fig.colorbar(axm.get_children()[1],cax=cbar_ax, orientation='horizontal', label='factor')
+
+fig.savefig(os.path.join('pproc',f'pareto_rivpumpfac_map.png'),dpi=300)
+
 # ---------------------------------------------
 # objective values at knee point  
 # ---------------------------------------------
