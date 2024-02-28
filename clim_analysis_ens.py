@@ -230,6 +230,7 @@ simyrs.to_csv('simyrs.csv')
 
 #---------------------------------------------------------------------
 # ---------- plot scatter runoff against rech ------------
+'''
 climy = pd.read_csv('climy.csv',header=[0,1],parse_dates=True)
 fig, ax = plt.subplots(1,2, figsize=(8, 4)) # Common x-axis
 axs[0].scatter(climy.loc[:,(slice(None),'rech')],climy.loc[:,(slice(None),'runoff')],
@@ -245,6 +246,6 @@ axs[1].set_title('Summer Runoff vs Annual Recharge')
 
 fig.tight_layout()
 
-
+'''
 
 
