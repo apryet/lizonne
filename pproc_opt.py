@@ -123,7 +123,8 @@ loc_list = doe_df.index
 #  periods with flow discharge below threshold levels
 qcrise_df    = qsim_df.le(doe_df['crise'])
 qrenforce_df = qsim_df.le(doe_df['renforce'])*(~qcrise_df)
-qalerte_df   = qsim_df.le(doe_df['alerte'])*(~qrenforce_df)*(~qcrise_df)
+#qalerte_df   = qsim_df.le(doe_df['alerte'])*(~qrenforce_df)*(~qcrise_df)
+qalerte_df   = qsim_df.le(doe_df['alerte']) # alert only
 # concatenate all types of alerts
 qalerts_df = pd.concat( [qalerte_df, qrenforce_df, qcrise_df],axis=1,
                      keys=['alerte','renforce','crise'],
@@ -138,22 +139,25 @@ for locnme in loc_list :
     plt.rc('font', family='serif', size=11)
     fig,lax = plt.subplots(figsize=(8,4))
     loc_long_name = doe_df.loc[locnme,'nom']
-    lax.set_title(f'Débit à la station \"{loc_long_name}\" ({locnme})')
+    lax.set_title(f'River flow at \"{loc_long_name}\" ({locnme})')
     bax = lax.twinx()
     # plot sim 
     lax.plot(qsim_df[locnme],c='red',alpha=0.8, lw=0.8,label='Sim.')
+    lax.set_ylim(0,0.5*qsim_df[locnme].max())
     lax.legend(loc='upper left')
     # plot critical levels 
     lax.axhline(y=doe_df.loc[locnme]['alerte'], color='gold', lw=0.8, ls='--')
-    lax.axhline(y=doe_df.loc[locnme]['renforce'], color='orange',lw=0.8, ls='--')
-    lax.axhline(y=doe_df.loc[locnme]['crise'], color='red',lw=0.8, ls='--')
+    #lax.axhline(y=doe_df.loc[locnme]['renforce'], color='orange',lw=0.8, ls='--')
+    #lax.axhline(y=doe_df.loc[locnme]['crise'], color='red',lw=0.8, ls='--')
     # plot bars in background (bar widths of 1 days)
     bax.bar(qalerts_df.index, qalerts_df.loc[:,('alerte',locnme)].astype(int),
-            color='gold',width=1,align='center',alpha=0.5,label='Alerte')
+            color='gold',width=1,align='center',alpha=0.5,label='Alert')
+    '''
     bax.bar(qalerts_df.index,qalerts_df.loc[:,('renforce',locnme)].astype(int),
             color='orange',align='center',width=1, alpha=0.5,label='Alerte renforcée')
     bax.bar(qalerts_df.index,qalerts_df.loc[:,('crise',locnme)].astype(int),
             color='red',align='center',width=1, alpha=0.5,label='Crise')
+    '''
     bax.set_ylim(0,1)
     bax.set_yticks([])
     bax.legend(loc='upper right')
