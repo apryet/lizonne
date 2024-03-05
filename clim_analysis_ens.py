@@ -60,39 +60,11 @@ for i in cm_df.index:
     # summer runoff
     clim['srunoff']=clim.runoff.values.copy()
     clim.loc[~clim.index.month.isin([6,7,8,9]),'srunoff']=0
-    # annual aggregation (remove incomplete 1st and last years)
     # annual rech of year Y from 1-oct-(Y-1) to 30-sept-(Y)
-    start = pd.Timestamp(f'{clim.index.min().year+1}-10-01')
-    end = pd.Timestamp(f'{clim.index.max().year-1}-10-01')
-    bins = pd.date_range(start,end, freq='12MS')
-    climy = clim.groupby(pd.cut(clim.index, bins=bins)).sum()
-    climy.index=bins[1:] # year Y
+    climy = clim.resample('A-SEP').sum()[1:-1] # trim incomplete years
     # add to compil dic 
     climy_dic[i]=climy
 
-
-'''
-# test 
-
-dates = pd.date_range('1980-08-01','1983-07-31')
-df = pd.DataFrame({'v':[0]},index=dates)
-
-df.loc['1981-09-01']=1
-df.loc['1981-11-01']=1
-df.loc['1982-01-05']=5
-
-# not effective
-df.groupby(pd.Grouper(freq="12MS", offset="10MS",origin='epoch')).sum()
-
-# effective 
-start = pd.Timestamp(f'{df.index.min().year+1}-10-01')
-end = pd.Timestamp(f'{df.index.max().year-1}-10-01')
-bins = pd.date_range(start,end, freq='12MS')
-dfy = df.groupby(pd.cut(df.index, bins=bins)).sum()
-dfy.index=bins[1:] # year Y
-print(dfy)
-
-'''
 
 # concat to single df 
 climy = pd.concat(climy_dic.values(),keys=climy_dic.keys(),axis=1)

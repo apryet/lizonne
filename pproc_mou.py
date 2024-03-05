@@ -23,18 +23,6 @@ for d in ['haqpump','qriv','heads']:
     os.mkdir(os.path.join('pproc',d))
 
 
-# TODO for KNEE POINT REALIZATION 
-# -> save pst with knee point parameters
-# -> run Marthe model 
-# -> plot constraints on head for knee point
-# -> plot discharge rates for knee point 
-# -> compute number of days alerte / alerte renforcée / crise 
-
-
-# plot pareto over all generations
-# plot annotated pareto of last generation
-# insert obj of fac 1 in pareto
-
 # analyze dv for knee point
 mm = MartheModel('Lizonne.rma', spatial_index = True)
 
@@ -194,6 +182,7 @@ def plot_multviolins(ens_list, ax, showpoints=False):
     ax.set_xticklabels([])
     ax.set_axisbelow(True)
     ax.yaxis.grid()
+    return(ax)
 
 # function to read decision variable population
 def read_dv_pop(csvfile):
@@ -230,7 +219,7 @@ for l,ax in zip([1,3,5],axs):
 ax.set_xticklabels(range(ngen))
 ax.set_xlabel('Generations')
 fig.tight_layout()
-fig.savefig(os.path.join('pproc','evol_aqpump.pdf'),dpi=300)
+fig.savefig(os.path.join('pproc',f'aqpumpfac_gen{gen}.pdf'),dpi=300)
 
 
 # plot river factors 
@@ -247,7 +236,7 @@ ax.set_xlabel('Generations')
 ax.set_ylabel('Factor value [-]')
 ax.set_title(f'Pumping factors for river reaches')
 fig.tight_layout()
-fig.savefig(os.path.join('pproc','evol_rivpump.pdf'),dpi=300)
+fig.savefig(os.path.join('pproc',f'rivpumpfac_gen{gen}.pdf'),dpi=300)
 
 # ---------------------------------------------
 # dv analysis for last generation (gen = ngen)
@@ -374,7 +363,7 @@ p1 = axs[1].get_position().get_points().flatten()
 p2 = axs[2].get_position().get_points().flatten()
 p3 = axs[3].get_position().get_points().flatten()
 cbar_ax = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.03]) # (left, bottom, width, height)
-fig.colorbar(axm.get_children()[1],cax=cbar_ax, orientation='horizontal', label='factor')
+fig.colorbar(ax.get_children()[1],cax=cbar_ax, orientation='horizontal', label='factor')
 
 fig.savefig(os.path.join('pproc',f'pareto_rivpumpfac_map.png'),dpi=300)
 

@@ -60,8 +60,7 @@ def plot_pareto(master_dir, gen, label, color, marker, ax, is_feasible=False):
 marker_dic = {'Q5':'^','Q50':'o','Q95':'v'}
 
 
-master_dirs = ['master_sim_Q5_1987_1','master_sim_Q5_2091_8','master_sim_Q50_2084_7','master_sim_Q50_1986_7','master_sim_Q95_2096_5','master_sim_Q95_1985_3']
-
+master_dirs = ['master_sim_Q50_1978_5','master_sim_Q50_2076_1','master_sim_Q5_1981_2','master_sim_Q5_2079_11']
 
 fig,ax = plt.subplots(1,1,figsize=(5,5))
 for master_dir in master_dirs:
