@@ -43,7 +43,6 @@ def plot_pareto(master_dir, gen, label, color, marker, ax, is_feasible=False):
             interp_method='interp1d',
         )
     kax = ax.scatter(kn.knee,kn.knee_y,marker=marker, edgecolor='darkred', alpha=0.8, color=color,s=60, label='Knee point')
-    #kax=None
     # no pumping (fac=0)
     fac0_rei = pyemu.pst_utils.read_resfile(os.path.join(master_dir,'mou_lizonne_fac0.base.rei'))
     fac0_pump = fac0_rei.loc['tot_pump','modelled']
@@ -54,13 +53,15 @@ def plot_pareto(master_dir, gen, label, color, marker, ax, is_feasible=False):
     fac1_pump = fac1_rei.loc['tot_pump','modelled']
     fac1_deficit = fac1_rei.loc['deficit_tot','modelled']
     f1ax = ax.scatter(fac1_deficit,fac1_pump,marker=marker,edgecolor='black',color=color,alpha=0.8,s=60,label='Factor=1')
-    return(pax, kax, f0ax, f1ax) 
 
 
 marker_dic = {'Q5':'^','Q50':'o','Q95':'v'}
 
+#master_dirs = ['master_sim_Q50_1978_5','master_sim_Q50_2076_1','master_sim_Q5_1981_2','master_sim_Q5_2079_11']
 
-master_dirs = ['master_sim_Q50_1978_5','master_sim_Q50_2076_1','master_sim_Q5_1981_2','master_sim_Q5_2079_11']
+#master_dirs = ['sim_Q50_1978_5','sim_Q50_2076_1','sim_Q5_1981_2','sim_Q5_2079_11','sim_Q95_2003_5','sim_Q95_2069_17']
+
+master_dirs = ['master_sim_Q5_1981_2','master_sim_Q5_2079_11','master_sim_Q50_1978_5']
 
 fig,ax = plt.subplots(1,1,figsize=(5,5))
 for master_dir in master_dirs:
@@ -69,7 +70,7 @@ for master_dir in master_dirs:
     prefix = 'hist.' if year < 2005 else 'fut.'
     color = 'grey' if year < 2005 else 'tan'
     marker=marker_dic[qt]
-    pax, kax, f0ax, f1ax = plot_pareto(master_dir, gen=9, label=f'{prefix}-{qt}', color=color, marker=marker, ax=ax)
+    plot_pareto(master_dir, gen=9, label=f'{prefix}-{qt}', color=color, marker=marker, ax=ax)
 
 
 

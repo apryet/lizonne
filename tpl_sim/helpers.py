@@ -83,8 +83,10 @@ def opt_pastp():
     cm_df = pd.read_excel('../data/DRIAS_Lizonne/clim_models.xlsx',index_col=0)
     gcm = cm_df.loc[cm_id,'GCM']
     rcm = cm_df.loc[cm_id,'RCM']
+    # start of warm up period 
     sim_start = pd.to_datetime(str(year-2)+'-08-01')
-    sim_end = pd.to_datetime(str(year)+'-12-31')
+    # end of simulation period
+    sim_end = pd.to_datetime(str(year)+'-09-30')
     # copy files 
     if os.path.exists('DRIAS_Lizonne'):
         shutil.rmtree('DRIAS_Lizonne')

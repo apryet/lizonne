@@ -482,7 +482,7 @@ print(f'Size of the parameter stack : {npar_reals}')
 par = pst.parameter_data
 
 # Set parameter value from base realization and set as fixed
-par.loc[mou_pe.columns,'parval1'] = mou_pe.loc['base'].values
+par.loc[mou_pe.columns,'parval1'] = mou_pe.loc['ffpt_center'].values
 
 # -- adjusting dv parameter settings
 par.loc[dvpars,'parlbnd']=0
@@ -531,7 +531,7 @@ for loc in discard_locs:
 # dv population size (twice the number of dv)
 num_dvpars = 2*dvpars.shape[0]
 print(f'Number of dv : {num_dvpars}')
-num_reals=2*116 # adjusted as a multiple of available cores (116)
+num_reals=1*116 # adjusted as a multiple of available cores (116)
 print(f'Size of dv population : {num_reals}')
 
 # set all parameters fixed and release dvpars 
@@ -599,7 +599,7 @@ pst.pestpp_options['mou_verbose_level'] = 4
 # ---------------------------------------------
 
 # ---- Write pst
-pst.control_data.noptmax = 50
+pst.control_data.noptmax = 20
 pst_name = 'mou_lizonne.pst'
 pst.write(pst_name)
 
