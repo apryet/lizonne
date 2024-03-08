@@ -269,8 +269,9 @@ fig.savefig(os.path.join('pproc','fpt_hsimobs.png'),dpi=300)
 
 #   ---------  selection of the two (article)
 
+obslocs = pd.read_excel(os.path.join('..','data','SIG','obsloc_labels.xlsx'),index_col='id')
 locs = ['P8284010','P7250001','07333X0027','07346X0017']
-labels = ['GS1','GS3','PZ1','PZ2']
+labels = obslocs.loc[locs].label
 units = ['River discharge [m$^3$/s]']*2 + ['Water level [m NGF]']*2
 trans = [lambda x : 10**x,lambda x : 10**x,lambda x : x,lambda x : x]
 
@@ -294,8 +295,6 @@ fig.axes[0].margins(x=0)
 fig.tight_layout()
 
 fig.savefig(os.path.join('pproc','fpt_q_and_h_simobs.png'),dpi=150)
-
-
 
 # ---------------------------------------------
 # final ensemble selection      
@@ -332,10 +331,15 @@ def get_sharpness(pt_oe,pr_oe=None):
 qt_lb=0.05
 qt_ub=0.95
 
-# --- plot reliability and sharpness through iterations  
+# -----------------------------------------------------
+# --- reliability and sharpness analysis   
+# -----------------------------------------------------
 
+# --- plot reliability and sharpness through iterations  
+fig,ax=plt.subplots(1,1,figsize=(6,4),sharey=True)
 nit = phi.shape[0]
 
+# all obs 
 rvals,svals,dvals=[],[],[]
 for i in range(nit):
     # load ensemble of simulated observations at IES iteration i
@@ -348,42 +352,46 @@ for i in range(nit):
     svals.append(s)
     dvals.append(d)
 
-fig,ax=plt.subplots(1,1,figsize=(6,4))
-ax.plot(rvals,'--+', color='royalblue',label='reliability')
-ax.plot(svals,'--+', color='darkgreen',label='sharpness')
-ax.plot(dvals,'-', color='black', label='distance to optimum')
-ax.set_xlabel('IES iterations')
-ax.legend()
-fig.savefig(os.path.join('pproc','rsd_through_iter.pdf'),dpi=300)
+rsd_iter = rvals, svals, dvals
 
+ax.plot(rvals,'--+', color='royalblue',label='Reliability')
+ax.plot(svals,'--+', color='darkgreen',label='Sharpness')
+ax.plot(dvals,'-+', color='black', label='Distance to optimum')
+ax.axvline(3,color='grey')
+ax.set_xlabel('IES iterations')
+ax.legend('lower right')
+fig.savefig(os.path.join('pproc','rsd_through_iterations.pdf'),dpi=300)
 
 # --- plot reliability and sharpness through final filtered ensemble size   
+fig,ax=plt.subplots(1,1,figsize=(6,4),sharey=True)
 
 # posterior observation ensemble sorted by decreasing phi
 spt_oe = fpt_oe.loc[fpt_oe.phi_vector.sort_values(ascending=False).index]
 
 # compute distance to optimum (r=1,s=1) to get optimum ffpt ensemble size
+
+# all obs. 
 rvals,svals,dvals=[],[],[]
 for n in range(spt_oe.shape[0]):
-    r=get_reliability(pt_oe.iloc[:n+1],obswns.loc['base'])
-    s= get_sharpness(pt_oe.iloc[:n+1],pr_oe)
+    r=get_reliability(spt_oe.iloc[:n+1],obswns.loc['base'])
+    s= get_sharpness(spt_oe.iloc[:n+1],pr_oe)
     d = np.sqrt((1-r)**2+(1-s)**2)
     rvals.append(r)
     svals.append(s)
     dvals.append(d)
 
-fig,ax=plt.subplots(1,1,figsize=(6,4))
-ax.plot(rvals,'--+', color='royalblue',label='reliability')
-ax.plot(svals,'--+', color='darkgreen',label='sharpness')
-ax.plot(dvals,'-', color='black', label='distance to optimum')
+ax.plot(rvals,'--+', color='royalblue',label='Reliability')
+ax.plot(svals,'--+', color='darkgreen',label='Sharpness')
+ax.plot(dvals,'-+', color='black', label='Distance to optimum')
 ax.set_xlabel('Number of realizations in the final filtered posterior ensemble')
-ax.legend()
-fig.savefig(os.path.join('pproc','rsd_through_nreals.pdf'),dpi=300)
+ax.legend('lower right')
+fig.tight_layout()
+fig.savefig(os.path.join('pproc','rsd_through_ensemble_size.pdf'),dpi=300)
 
 # optimum size for the final filtered posterior ensemble
 nreals_ffpt_ens=np.argmin(dvals)
-
 print(f'Optimum number of best realizations is: {nreals_ffpt_ens}')
+
 
 # final ensemble selection 
 ffpt_oe = spt_oe.iloc[:nreals_ffpt_ens] # set to nreals_ffpt_ens after examination of rsd.pdf
@@ -404,6 +412,104 @@ fig.savefig(os.path.join('pproc','ffpt_qsimobs.png'),dpi=300)
 
 fig = plot_tseries_ensembles(None, ffpt_oe, obswns , obswells, ogdates,trans=lambda x : x, ylabel='Water level [m NGF]')
 fig.savefig(os.path.join('pproc','ffpt_hsimobs.png'),dpi=300)
+
+
+# ---------------------------------------------
+# evolution of phi and hist for last iteration + rsd 
+# ---------------------------------------------
+
+fig, axes = plt.subplots(1, 2, figsize=(10,4),width_ratios=[6,4])
+# phi evol
+phi_color = 'grey'
+ax = axes[0]
+phi = pd.read_csv(os.path.join(f"{case}.phi.actual.csv"),index_col=0)
+phi.iloc[:,6:].apply(np.log10).plot(legend=False,lw=0.5,color=phi_color,alpha=0.8, ax=ax)
+
+ax.set_ylabel('$log10(\Phi)$')
+ax.set_xlabel('IES iterations')
+ax.axvline(0,color='grey',ls='--',lw=3,alpha=0.6)
+ax.axvline(3,color='darkred',ls='--',lw=3,alpha=0.6)
+ax.text(0.5,7.4,'(a)',fontsize=25)
+
+phi_evol_handle = Line2D([0], [0], label='$\Phi$ (232 realizations)', color=phi_color, marker=None, linestyle= '-')
+ax.legend(handles=[phi_evol_handle], alignment='left', loc='lower left',  bbox_to_anchor=(0.1, 0))
+
+# rsd 
+twax= ax.twinx()
+rsd_color = 'blue'
+rvals, svals, dvals = rsd_iter
+rl = twax.plot(rvals,'--+', color='royalblue',label='Reliability')
+sl = twax.plot(svals,'--*', color='darkgreen',label='Sharpness')
+dl = twax.plot(dvals,'-', color='black', label='Distance to opt.')
+# legend
+lns = rl + sl + dl
+labs = [l.get_label() for l in lns]
+twax.legend(lns, labs,loc='upper right', bbox_to_anchor=(0.95, 1),alignment='right',fontsize=10)
+
+ax.set_ylabel('$log10(\Phi)$')
+
+# histogram
+ax = axes[1]
+
+bins=np.histogram(np.hstack((pr_logphi,pt_logphi)), bins=40)[1] #get the bin edges
+pr_logphi.hist(bins=bins,ax=ax,fc="0.5",ec="none",alpha=0.6,density=False,label='Prior (iteration 0)')
+pt_logphi.hist(bins=bins,ax=ax,fc="darkred",ec="none",alpha=0.6,density=False,label='Posterior (iteration 3)')
+ax.legend()
+_ = ax.set_xlabel('log10($\Phi$)')
+
+ax.text(5.01,42,'(b)',fontsize=25)
+
+fig.tight_layout()
+
+fig.savefig(os.path.join('pproc','phi_rsd.pdf'),dpi=300)
+
+
+
+# ---------------------------------------------
+# fit statistics   
+# ---------------------------------------------
+
+
+oobs = obs.loc[obs.obgnme==og.lower(),:].copy()
+onames = oobs.obsnme.values
+odates = ogdates[og]
+
+# get all metrics 
+m = pyemu.utils.metrics.calc_metric_ensemble(ffpt_oe._df,pst)
+
+# drop fluctuations
+m = m.loc[:,~m.columns.str.endswith('mf')]
+
+
+# multiindex
+locs = [cname.split('_')[-1] for cname in m.columns]
+metrics  = ['_'.join(cname.split('_')[:-1]) for cname in m.columns]
+m.columns = pd.MultiIndex.from_frame(
+        pd.DataFrame(
+            {'metric':metrics,
+            'loc':locs}
+            )
+        )
+
+
+# label dics 
+label_dic = {id.lower():label for id,label in zip(obslocs.index,obslocs.label)}
+m.columns = m.columns.set_levels(m.columns.levels[1].map(label_dic,na_action='ignore'),level=1)
+
+allgstations = obslocs.loc[obslocs.index.str.startswith('P'),'label'].sort_values()
+allobswells = obslocs.loc[obslocs.index.str.contains('X'),'label'].sort_values()
+
+fig, axs = plt.subplots(1,2,figsize=(12,4),width_ratios=[len(allgstations),len(allobswells)])
+ax1 = m.loc[:,('KGE',allgstations)].boxplot(showfliers=False,ax=axs[0])
+ax1.set_xticklabels(allgstations.values)
+ax1.set_ylabel('KGE [-]')
+ax1.set_title('Gaging stations (KGE)')
+ax2 = m.loc[:,('RMSE',allobswells)].boxplot(showfliers=False, ax=axs[1])
+ax2.set_xticklabels(allobswells.values)
+ax2.set_title('Observation wells (RMSE)')
+ax2.set_ylabel('RMSE [m]')
+fig.tight_layout()
+fig.savefig(os.path.join('pproc','metrics_boxplots.pdf'),dpi=300)
 
 # ---------------------------------------------
 # parameters evolution  
@@ -555,6 +661,8 @@ pst.parameter_data.loc[par_set.index,'parval1']=par_set.values
 pst.control_data.noptmax=0
 pst.write('caleval_ffpt_center.pst')
 
+
+'''
 # run pest with center real from final filtered posterior ensemble (ffpt)
 pyemu.os_utils.run('pestpp-ies caleval_ffpt_center.pst')
 
@@ -562,7 +670,7 @@ pyemu.os_utils.run('pestpp-ies caleval_ffpt_center.pst')
 tpl_sim_dir = os.path.join('..','tpl_sim')
 
 # post-proc center real
-print('post processing center realization...')
+print('post processing center realization...'
 exec(open('../pproc_cal.py').read())
 
 print('Copying model files of center real to {tpl_sim_dir}')
@@ -573,3 +681,5 @@ shutil.copy('chasim.out',os.path.join(tpl_sim_dir,'chasim.out.cal'))
 
 # copying the final filtered posterior parameter ensemble (it will constitute the par stack for MOU)
 shutil.copy('cal_lizonne.ffpt.par.csv',os.path.join(tpl_sim_dir,'cal_lizonne.ffpt.par.csv'))
+
+'''
