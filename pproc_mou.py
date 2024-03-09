@@ -32,19 +32,21 @@ fac1_rei = pyemu.pst_utils.read_resfile(os.path.join('..', sim_dir,'mou_lizonne_
 fac1_pump = fac1_rei.loc['tot_pump','modelled']
 fac1_deficit = fac1_rei.loc['deficit_tot','modelled']
 
+
+# generation selected for analysis
+opt_gen = 10
+
 # ---------------------------------------------
 # pproc mou  : pareto
 # ---------------------------------------------
 
 pst = pyemu.Pst('mou_lizonne.pst')
 
-# pareto archive summary
-pasum_df = pd.read_csv('mou_lizonne.pareto.archive.summary.csv')
-feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
-#feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1, axis=1),:]
-
+# summary of pareto dominant solutions for each generation
+pasum_df = pd.read_csv('mou_lizonne.pareto.summary.csv')
 ngen = feas_front_df.generation.unique().shape[0]
-#ngen=11
+feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
+feas_front_members = feas_front_df.loc[feas_front_df.generation==opt_gen,'member'].values
 
 cmap = matplotlib.colormaps.get_cmap('gist_heat').reversed()
 
@@ -95,56 +97,6 @@ ax.set_ylim(feas_front_df.loc[:,objs[1]].min(),
 
 
 fig.savefig(os.path.join('pproc','allgens_pareto.pdf'), dpi=300)
-
-# ----------------------------------------------------
-# pproc mou  : last generation pareto with fac1 config
-# ----------------------------------------------------
-
-gen = ngen-1 
-
-fig,ax = plt.subplots(1,1,figsize=(5,5))
-objs = pst.pestpp_options["mou_objectives"].split(',')
-df = feas_front_df.loc[feas_front_df.generation==gen,:]
-ax.scatter(df.loc[:,objs[0]],df.loc[:,objs[1]],
-           marker="o",s=60,color='darkred',label=f'Pareto for gen. {gen}',alpha=0.7)
-
-# extract and plot member ids
-'''
-mids = df.member.str.extract(r'member=(\d*)_', expand=False)
-for mid, x, y in zip(mids,df.loc[:,objs[0]], df.loc[:,objs[1]]):
-    ax.annotate(mid,(x,y),ha='left',va='center',
-                xytext=(3,0),textcoords='offset points',
-                fontsize=6)
-'''
-
-# knee point 
-sdf = df.sort_values(objs[0])
-lastgenkn = kneed.KneeLocator(
-        sdf.loc[:,objs[0]],
-        sdf.loc[:,objs[1]],
-        curve='concave',
-        direction='increasing',
-        interp_method='interp1d',
-    )
-
-#kn.plot_knee_normalized()
-
-# knee
-ax.scatter(lastgenkn.knee,lastgenkn.knee_y,marker='D',color='royalblue',s=60, label='Knee point')
-
-# fac1 configuration for comparative purpose 
-ax.scatter(fac1_deficit,fac1_pump,marker="+", edgecolor='black',color='black',s=60,label='Factor=1')
-
-ax.legend(loc='lower left')
-
-ax.set_xlabel('Total deficit [m$^3$]')
-ax.set_ylabel('Total pumping [m$^3$]')
-ax.set_xlim(feas_front_df.loc[:,objs[0]].min(),
-                      feas_front_df.loc[:,objs[0]].max())
-ax.set_ylim(feas_front_df.loc[:,objs[1]].min(),
-                      feas_front_df.loc[:,objs[1]].max())
-
-fig.savefig(os.path.join('pproc',f'lastgen_pareto.pdf'),dpi=300)
 
 # ---------------------------------------------
 # pproc mou : dv over generations (convergence check)
@@ -202,7 +154,7 @@ def read_dv_pop(csvfile):
                           'year':fac_year,'month':fac_month
                           })
             )
-    return(dv_pop.T)
+    return(dv_pop)
 
 # plot rivpump factors 
 fig,axs=plt.subplots(3,1,figsize=(8,8))
@@ -211,7 +163,7 @@ for l,ax in zip([1,3,5],axs):
     for gen in range(ngen):
         dv_pop = read_dv_pop(f'mou_lizonne.{gen}.dv_pop.csv')
         ptype = 'aq'
-        ens_list.append(dv_pop.loc[(ptype,l,slice(None))].values.ravel())
+        ens_list.append(dv_pop.T.loc[(ptype,l,slice(None))].values.ravel())
     plot_multviolins(ens_list, ax)
     ax.set_title(f'Pumping factors for layer {l}')
     ax.set_ylabel('Factor value [-]')
@@ -228,7 +180,7 @@ ens_list = []
 for gen in range(ngen):
     dv_pop = read_dv_pop(f'mou_lizonne.{gen}.dv_pop.csv')
     ptype = 'riv'
-    ens_list.append(dv_pop.loc[(ptype,slice(None),slice(None))].values.ravel())
+    ens_list.append(dv_pop.T.loc[(ptype,slice(None),slice(None))].values.ravel())
 
 plot_multviolins(ens_list, ax)
 ax.set_xticklabels(range(ngen))
@@ -238,77 +190,89 @@ ax.set_title(f'Pumping factors for river reaches')
 fig.tight_layout()
 fig.savefig(os.path.join('pproc',f'rivpumpfac_gen{gen}.pdf'),dpi=300)
 
+
+
+
 # ---------------------------------------------
-# dv analysis for last generation (gen = ngen)
+# absolute pumping values
+# ---------------------------------------------
+
+# --- load original aquifer pumping 
+org_parfile = os.path.join('pest','par','aqpump.dat.org')
+keys=['boundname','layer','istep']
+parkmi, parvals = pest_utils.parse_mlp_parfile(org_parfile, keys=keys, value_col=1, btrans='none')
+parvals.index=parkmi
+aqpump_org = parvals.groupby(level=('layer','istep')).sum()
+dates = mm.mldates[aqpump_org.index.get_level_values('istep')]
+aqpump_org.index=pd.MultiIndex.from_frame(pd.DataFrame({
+            'type':'aq',
+            'id':aqpump_org.index.get_level_values('layer'),
+            'year':dates.year,
+            'month':dates.month
+            }))
+
+# --- load original river pumping 
+
+org_parfile = os.path.join('pest','par','rivpump.dat.org')
+keys=['prefix','aff_r','istep']
+parkmi, parvals = pest_utils.parse_mlp_parfile(org_parfile, keys=keys, value_col=1, btrans='none')
+parvals.index=parkmi
+rivpump_org = parvals.groupby(level=('aff_r','istep')).sum()
+dates = mm.mldates[rivpump_org.index.get_level_values('istep')]
+rivpump_org.index=pd.MultiIndex.from_frame(pd.DataFrame({
+            'type':'riv',
+            'id':rivpump_org.index.get_level_values('aff_r'),
+            'year':dates.year,
+            'month':dates.month
+            }))
+
+# concat and convert to m3/month
+monthly_m3sec_to_m3 = -1*(365.25/12)*86400 # (days in a month) * (seconds in a day)
+pump_org = pd.concat([aqpump_org,rivpump_org])*monthly_m3sec_to_m3
+
+# ---------------------------------------------
+# dv analysis for opt_gen
 # ---------------------------------------------
 
 # plot aqpump factors 
-dv_pop = read_dv_pop(f'mou_lizonne.{gen}.dv_pop.csv')
-opt_year = dv_pop.index.levels[2].max()
-months = dv_pop.index.levels[3]
-layers = dv_pop.xs('aq').index.get_level_values(0).unique()
-fig, axs=plt.subplots(len(months),1,figsize=(4,8))
-for m,ax in zip(months,axs):
-    ens_list = [ dv_pop.loc[('aq',l,opt_year,m)] for l in layers ]
-    plot_multviolins(ens_list, ax)
-    ax.set_title(f'Pumping factors for month {m}')
-    ax.set_ylabel('Factor value [-]')
 
-ax.set_xticklabels(layers)
-ax.set_xlabel('Layer')
-fig.tight_layout()
-fig.savefig(os.path.join('pproc',f'lastgen_aqpumpfac.pdf'),dpi=300)
+# load dv and obs of pareto members at gen=opt_gen
+dv_pop = read_dv_pop(f'mou_lizonne.{opt_gen}.dv_pop.csv')
+dv_pop = dv_pop.loc[feas_front_members] # subset to pareto members
+obs_pop = pd.read_csv(f'mou_lizonne.{opt_gen}.chance.obs_pop.csv',index_col=0)
+obs_pop = obs_pop.loc[feas_front_members] # subset to pareto members
 
-# plot rivpump factors 
-dv_pop = read_dv_pop(f'mou_lizonne.{gen}.dv_pop.csv')
-opt_year = dv_pop.index.levels[2].max()
-months = dv_pop.index.levels[3]
-reach_ids = dv_pop.xs('riv').index.get_level_values(0).unique()
-fig, axs=plt.subplots(len(months),1,figsize=(8,8))
-for m,ax in zip(months,axs):
-    ens_list = [ dv_pop.loc[('riv',r,opt_year,m)] for r in reach_ids ]
-    plot_multviolins(ens_list, ax)
-    ax.set_title(f'Pumping factors for month {m}')
-    ax.set_ylabel('Factor value [-]')
-
-ax.set_xticklabels(reach_ids)
-ax.set_xlabel('Reach id')
-fig.tight_layout()
-fig.savefig(os.path.join('pproc',f'lastgen_rivpumpfac.pdf'),dpi=300)
-
-
-
-# ---------------------------------------------
-# dv of pareto aqpump and rivpump (gen = ngen)
-# ---------------------------------------------
-
-# violin plots 
-dv_pop = read_dv_pop(f'mou_lizonne.archive.dv_pop.csv')
-opt_year = dv_pop.index.levels[2].max()
-dv_pop = dv_pop.loc[slice(None),slice(None),opt_year,slice(None),:]
-
+facvals = dv_pop.T
+pump_opt = facvals.mul(pump_org.loc[facvals.index],axis=0)
 mmonths = {6:'June',7:'July',8:'August',9:'September'}
-
-# plot aqpump and rivpump factors 
-fig,axs=plt.subplots(1,4,figsize=(8,4),sharey=True)
+ # plot
+fig,axs=plt.subplots(1,4,figsize=(9,3),sharey=True)
 for m,ax in zip([6,7,8,9],axs):
-    ens_list = []
-    ptype = 'aq'
-    for l in [1,3,5]:
-        ens_list.append(dv_pop.loc[('aq',l,m)].values.ravel())
-    ens_list.append(dv_pop.loc[('riv',slice(None),m)].values.ravel())
-    ax = plot_multviolins(ens_list, ax)
+    year = dv_pop.columns.get_level_values('year').max()    
+    # plot aq factors 
+    for i,l in enumerate([1,3,5]):
+        ax.bar(i,pump_org.loc[('aq',l,year,m)],color='grey',alpha=0.5,label='Original values')
+        pump_opt_vals = pump_opt.loc[('aq',l,year,m),:].values
+        ax.plot([i]*len(pump_opt_vals),pump_opt_vals,ls='',marker='+', c='k',label= 'Pareto members')
+    # plot riv factors (all reaches)
+    ax.bar(i+1,pump_org.loc[('riv',slice(None),year,m)].sum(),color='grey',alpha=0.5)
+    pump_opt_vals =[min(p,4e6) for p in  pump_opt.loc[('riv',slice(None),year,m)].sum(axis=0).values]
+    ax.plot([i+1]*len(pump_opt_vals),pump_opt_vals,ls='',marker='+', c='k')
+    # rename ticks 
+    ax.xaxis.set_ticks(range(i+2))
     ax.set_xticklabels(['l2','l4','l6','riv'])
     ax.set_title(mmonths[m])
+    #ax.set_ylim(0,4.5e6)
 
-axs[0].set_ylabel('Factor value [-]')
+handles, labels = axs[0].get_legend_handles_labels()
+axs[0].legend(handles=[handles[0],handles[-1]],labels=[labels[0],labels[-1]],loc='upper left',fontsize=9)
+axs[0].set_ylabel('Pumping [m3/month]')
 fig.tight_layout()
+fig.savefig(os.path.join('pproc','factors_along_pareto.pdf'),dpi=300)
 
-fig.savefig(os.path.join('pproc','evol_aqpump.pdf'),dpi=300)
-#fig.savefig(os.path.join('evol_aqpump.pdf'),dpi=300)
-
-
+# ---------------------------------------------
 # --- plot decorated rivpump factors map
+# ---------------------------------------------
 
 # load shapefile of simulated river network
 simriv_shp = os.path.join('gis','sim_riv.shp')
