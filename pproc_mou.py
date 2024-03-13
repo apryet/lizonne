@@ -10,10 +10,14 @@ from pymarthe import MartheModel
 from pymarthe.utils import marthe_utils, shp_utils, pest_utils, pp_utils
 from pymarthe.mfield import MartheField, MartheFieldSeries
 import matplotlib.pyplot as plt
+from matplotlib_scalebar.scalebar import ScaleBar
 import matplotlib 
 import kneed 
 # plot settings
-plt.rc('font', family='serif', size=11)
+plt.rc('font', family='serif', size=9)
+sgcol_width = 9/2.54
+mdcol_width = 14/2.54
+dbcol_width = 19/2.54
 color_dic = {'fac1':'tan','opt':'royalblue'}
 
 # clean and (re)-build directory tree
@@ -44,9 +48,9 @@ pst = pyemu.Pst('mou_lizonne.pst')
 
 # summary of pareto dominant solutions for each generation
 pasum_df = pd.read_csv('mou_lizonne.pareto.summary.csv')
-ngen = feas_front_df.generation.unique().shape[0]
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
 feas_front_members = feas_front_df.loc[feas_front_df.generation==opt_gen,'member'].values
+ngen = feas_front_df.generation.unique().shape[0]
 
 cmap = matplotlib.colormaps.get_cmap('gist_heat').reversed()
 
@@ -190,9 +194,6 @@ ax.set_title(f'Pumping factors for river reaches')
 fig.tight_layout()
 fig.savefig(os.path.join('pproc',f'rivpumpfac_gen{gen}.pdf'),dpi=300)
 
-
-
-
 # ---------------------------------------------
 # absolute pumping values
 # ---------------------------------------------
@@ -234,6 +235,8 @@ pump_org = pd.concat([aqpump_org,rivpump_org])*monthly_m3sec_to_m3
 # dv analysis for opt_gen
 # ---------------------------------------------
 
+
+
 # plot aqpump factors 
 
 # load dv and obs of pareto members at gen=opt_gen
@@ -245,34 +248,39 @@ obs_pop = obs_pop.loc[feas_front_members] # subset to pareto members
 facvals = dv_pop.T
 pump_opt = facvals.mul(pump_org.loc[facvals.index],axis=0)
 mmonths = {6:'June',7:'July',8:'August',9:'September'}
- # plot
-fig,axs=plt.subplots(1,4,figsize=(9,3),sharey=True)
-for m,ax in zip([6,7,8,9],axs):
-    year = dv_pop.columns.get_level_values('year').max()    
+
+
+# plot
+fig,axs=plt.subplots(2,4,figsize=(dbcol_width,0.6*dbcol_width))
+for m,ax in zip([6,7,8,9],axs[0,:]):
+    year = dv_pop.columns.get_level_values('year').max()
+    # plot riv factors (all reaches)
+    ax.bar(0,pump_org.loc[('riv',slice(None),year,m)].sum(),color='grey',alpha=0.5)
+    # reduce value of river pumping for plotting 
+    pump_opt_vals =[min(p,4e6) for p in  pump_opt.loc[('riv',slice(None),year,m)].sum(axis=0).values]
+    ax.plot([0]*len(pump_opt_vals),pump_opt_vals,ls='',marker='+', c='k')
     # plot aq factors 
     for i,l in enumerate([1,3,5]):
-        ax.bar(i,pump_org.loc[('aq',l,year,m)],color='grey',alpha=0.5,label='Original values')
+        ax.bar(i+1,pump_org.loc[('aq',l,year,m)],color='grey',alpha=0.5,label='Original')
         pump_opt_vals = pump_opt.loc[('aq',l,year,m),:].values
-        ax.plot([i]*len(pump_opt_vals),pump_opt_vals,ls='',marker='+', c='k',label= 'Pareto members')
-    # plot riv factors (all reaches)
-    ax.bar(i+1,pump_org.loc[('riv',slice(None),year,m)].sum(),color='grey',alpha=0.5)
-    pump_opt_vals =[min(p,4e6) for p in  pump_opt.loc[('riv',slice(None),year,m)].sum(axis=0).values]
-    ax.plot([i+1]*len(pump_opt_vals),pump_opt_vals,ls='',marker='+', c='k')
+        ax.plot([i+1]*len(pump_opt_vals),pump_opt_vals,ls='',marker='+', c='k',label= 'Optimized')
     # rename ticks 
     ax.xaxis.set_ticks(range(i+2))
-    ax.set_xticklabels(['l2','l4','l6','riv'])
+    if m>6:
+        ax.set_yticklabels([])
+    ax.set_xticklabels(['RIV','COST','TURO','CENO'],fontsize=8)
     ax.set_title(mmonths[m])
-    #ax.set_ylim(0,4.5e6)
+    ax.set_ylim(0,4e6)
 
-handles, labels = axs[0].get_legend_handles_labels()
-axs[0].legend(handles=[handles[0],handles[-1]],labels=[labels[0],labels[-1]],loc='upper left',fontsize=9)
-axs[0].set_ylabel('Pumping [m3/month]')
-fig.tight_layout()
-fig.savefig(os.path.join('pproc','factors_along_pareto.pdf'),dpi=300)
 
-# ---------------------------------------------
+ytlbls = axs[0,0].get_yticklabels()
+ytlbls[-1].set_text('>4')
+axs[0,0].set_yticklabels(ytlbls)
+handles, labels = axs[0,0].get_legend_handles_labels()
+axs[0,0].legend(handles=[handles[0],handles[-1]],labels=[labels[0],labels[-1]],loc='upper right')
+axs[0,0].set_ylabel('Pumping [Mm$^3$/month]')
+
 # --- plot decorated rivpump factors map
-# ---------------------------------------------
 
 # load shapefile of simulated river network
 simriv_shp = os.path.join('gis','sim_riv.shp')
@@ -286,7 +294,7 @@ basin_gdf = gpd.read_file(basin_shp)
 # load histo file and convert to gpd
 histo_df = marthe_utils.read_histo_file(mm.mlname+'.histo')
 histo_gdf = gpd.GeoDataFrame(histo_df,
-                       geometry = gpd.points_from_xy(histo_df['x'], 
+                       geometry = gpd.points_from_xy(histo_df['x'],
                                                      histo_df['y']),
                        crs = 2154) # EPSG:RGF93
 
@@ -296,13 +304,13 @@ gstations_gdf['label2']= gstations_gdf.label.replace(['P8284010', 'P8215010', 'P
                                        ['GS1','GS4','GS3','GS2'])
 
 # load factors 
-rivfacvals = dv_pop.loc[('riv',slice(None),slice(None))]
+rivfacvals = dv_pop.T.loc[('riv',slice(None),slice(None))]
 mrivfacvals = rivfacvals.mean(axis=1).unstack()
+mrivfacvals.index = mrivfacvals.index.droplevel('year')
 simriv_gdf = simriv_gdf.merge(mrivfacvals,left_index=True, right_index=True)
 
 # plot maps
-fig,axs = plt.subplots(1,4,figsize=(10,3.5))
-for m,ax in zip(mmonths.keys(),axs):
+for m,ax in zip(mmonths.keys(),axs[1,:]):
     # basin outline
     ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
     # pumping factors
@@ -311,41 +319,76 @@ for m,ax in zip(mmonths.keys(),axs):
     ax = gstations_gdf.plot(marker='^',c='red',
         edgecolor='black', markersize=22, label='Gaging stations', ax=ax)
     gstations_gdf.apply(lambda x: ax.annotate(
-        text=x['label2'], xy=x.geometry.coords[0], 
+        text=x['label2'], xy=x.geometry.coords[0],
         xytext=(3, -5), textcoords="offset points",
         fontsize=6), axis=1)
-    ax.set_title(mmonths[m])
-    ax.axes.get_xaxis().set_visible(False)
-    ax.axes.get_yaxis().set_visible(False)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel('X (eastward)')
+    ax.add_artist(ScaleBar(1))
 
+axs[1,0].set_ylabel('Y (northward)')
 fig.tight_layout()
 
 # append colorbar
 fig.subplots_adjust(bottom=0.20)
-p0 = axs[0].get_position().get_points().flatten()
-p1 = axs[1].get_position().get_points().flatten()
-p2 = axs[2].get_position().get_points().flatten()
-p3 = axs[3].get_position().get_points().flatten()
-cbar_ax = fig.add_axes([p1[0], 0.2, p2[2]-p1[0], 0.03]) # (left, bottom, width, height)
-fig.colorbar(ax.get_children()[1],cax=cbar_ax, orientation='horizontal', label='factor')
+p0 = axs[1,0].get_position().get_points().flatten()
+p1 = axs[1,1].get_position().get_points().flatten()
+p2 = axs[1,2].get_position().get_points().flatten()
+p3 = axs[1,3].get_position().get_points().flatten()
+cbar_ax = fig.add_axes([p1[0], 0.1, p2[2]-p1[0], 0.02]) # (left, bottom, width, height)
+fig.colorbar(ax.get_children()[1],cax=cbar_ax, orientation='horizontal', label='River Pumping Factors [-]')
 
-fig.savefig(os.path.join('pproc',f'pareto_rivpumpfac_map.png'),dpi=300)
+
+# set the spacing between subplots
+fig.subplots_adjust(left=0.08)
+fig.subplots_adjust(wspace=0.12)
+fig.subplots_adjust(hspace=0.30)
+fig.subplots_adjust(right=0.975)
+fig.subplots_adjust(bottom=0.20)
+fig.subplots_adjust(top=0.925)
+
+# 
+line = matplotlib.lines.Line2D((0.025,0.975),(0.55,0.55),color='k',linewidth=1,transform=fig.transFigure)
+fig.lines.append(line)
+
+fig.text(0.008,0.95,'(a)',fontsize=14,transform=fig.transFigure)
+fig.text(0.008,0.49,'(b)',fontsize=14,transform=fig.transFigure)
+
+fig.savefig(os.path.join('pproc',f'pareto_rivpumpfac.pdf'),dpi=300)
+
+i
+
+
+
+
 
 # ---------------------------------------------
 # objective values at knee point  
 # ---------------------------------------------
 
-# read dv and obs pop archives
-dv_pop = pd.read_csv('mou_lizonne.archive.dv_pop.csv',index_col=0)
+# load dv and obs of pareto members at gen=opt_gen
+dv_pop = read_dv_pop(f'mou_lizonne.{opt_gen}.dv_pop.csv')
+dv_pop = dv_pop.loc[feas_front_members] # subset to pareto members
+obs_pop = pd.read_csv(f'mou_lizonne.{opt_gen}.chance.obs_pop.csv',index_col=0)
 
-obs_pop = pd.read_csv('mou_lizonne.archive.obs_pop.csv')
-obs_pop.set_index(obs_pop.real_name.str.extract(r'member=(\d*)_', expand=False).astype(int),inplace=True)
+# knee point of last gen
+df = feas_front_df.loc[feas_front_df.generation==opt_gen,:]
+# sort pareto 
+sdf = df.sort_values(objs[0])
+# identify knee/elbow pareto optimum 
+kn = kneed.KneeLocator(
+    sdf.loc[:,objs[0]],
+    sdf.loc[:,objs[1]],
+    curve='concave',
+    direction='increasing',
+    interp_method='interp1d',
+)
 
 # realization number of knee point 
-realkn = obs_pop.index[(obs_pop.deficit_tot==lastgenkn.knee) & (obs_pop.tot_pump==lastgenkn.knee_y)][0].astype(int)
+realkn = obs_pop.index[(obs_pop.deficit_tot==kn.knee) & (obs_pop.tot_pump==kn.knee_y)][0]
 
 # --- compare objectives 
-
 # member realkn
 kn_pump = obs_pop.loc[realkn,'tot_pump']
 kn_deficit = obs_pop.loc[realkn,'deficit_tot']
@@ -391,15 +434,14 @@ fig.savefig(os.path.join('pproc','kneepoint_objvals.pdf'),dpi=300)
 # plot pumping factors (dv) for real realkn
 # ---------------------------------------------
 
-# read dv and obs pop archives
-dv_pop = pd.read_csv('mou_lizonne.archive.dv_pop.csv')
-dv_pop.set_index(dv_pop.real_name.str.extract(r'member=(\d*)_', expand=False).astype(int),inplace=True)
-dv_pop = dv_pop.loc[:,dv_pop.columns.str.contains('fac') ]
 # select realization corresponding to kneepoint 
 real = realkn
 
+# read dv and obs pop archives
+dv_pop = pd.read_csv('mou_lizonne.archive.dv_pop.csv',index_col=0)
+par = dv_pop.loc[realkn,dv_pop.columns.str.contains('fac') ].T
+
 # --- plot aqpump factors  
-par = dv_pop.iloc[:,1:].loc[real]
 fac_type = [ pname.split('pump')[0] for pname in par.index]
 fac_id = np.array([ pname.split('_')[1] for pname in par.index]).astype(int)
 fac_istep = np.array([ pname.split('_')[2] for pname in par.index]).astype(int)
@@ -421,19 +463,6 @@ fig.tight_layout()
 fig.savefig(os.path.join('pproc',f'kneepoint_aqpumpfac_bars.pdf'),dpi=300)
 
 # --- plot aqpump factors  
-par = dv_pop.iloc[:,1:].loc[real]
-fac_type = [ pname.split('pump')[0] for pname in par.index]
-fac_id = np.array([ pname.split('_')[1] for pname in par.index]).astype(int)
-fac_istep = np.array([ pname.split('_')[2] for pname in par.index]).astype(int)
-fac_date = mm.mldates[fac_istep]
-fac_year = fac_date.year
-opt_year = max(fac_year)
-fac_month = fac_date.month
-par.index = pd.MultiIndex.from_frame(
-        pd.DataFrame({'type':fac_type,'id':fac_id,
-                      'year':fac_year,'month':fac_month
-                      })
-        )
 rivfacvals = par.loc[('riv',slice(None),opt_year)]
 vmin,vmax= rivfacvals.min(),rivfacvals.max()
 # aggregate over years 
@@ -451,28 +480,12 @@ simriv_shp = os.path.join('gis','sim_riv.shp')
 simriv_gdf = gpd.read_file(simriv_shp)
 simriv_gdf.set_index(simriv_gdf.val.astype(int),inplace=True)
 
-#def barplot_rivfac(dv_pop,real,simriv_gdf):
-par = dv_pop.iloc[:,1:].loc[real]
-fac_type = [ pname.split('pump')[0] for pname in par.index]
-fac_id = np.array([ pname.split('_')[1] for pname in par.index]).astype(int)
-fac_istep = np.array([ pname.split('_')[2] for pname in par.index]).astype(int)
-fac_date = mm.mldates[fac_istep]
-fac_year = fac_date.year
-opt_year = max(fac_year)
-fac_month = fac_date.month
-par.index = pd.MultiIndex.from_frame(
-    pd.DataFrame({'type':fac_type,'id':fac_id,
-                  'date':fac_date.strftime('%Y-%m'),
-                  'year':fac_year
-                  })
-    )
-rivfacvals = par.loc[('riv',slice(None),slice(None),opt_year)]
 simriv_gdf = simriv_gdf.merge(rivfacvals.unstack(),left_index=True, right_index=True)
-plot_dates = rivfacvals.index.get_level_values('date').unique()
+months = rivfacvals.index.get_level_values('month').unique()
 fig,axs = plt.subplots(1,4,figsize=(10,4))
-for d,ax in zip(plot_dates,axs.ravel()):
-    simriv_gdf.plot(ax=ax,column=d,vmin=0,vmax=2)
-    ax.set_title(d)
+for m,ax in zip(months,axs.ravel()):
+    simriv_gdf.plot(ax=ax,column=m,vmin=0,vmax=2)
+    ax.set_title(m)
     ax.axes.get_xaxis().set_visible(False)
     ax.axes.get_yaxis().set_visible(False)
 
@@ -491,7 +504,6 @@ fig.savefig(os.path.join('pproc',f'kneepoint_rivpumpfac_map.pdf'),dpi=300)
 # plot aquifer constraints
 #====================================================
 
-# ---  uncertainties on gw levels in pumped cells derived from par stack at 1st iteration
 
 # load hist file to get aqpump data
 histo_df = marthe_utils.read_histo_file('Lizonne.histo')
@@ -500,28 +512,25 @@ aqpumpcells.index= aqpumpcells.label.apply(lambda x: x.split('_')[1]).astype(int
 aqpumpcells.index.name='node'
 
 # load obs stack
-obs_pop = pd.read_csv('mou_lizonne.0.obs_stack.csv')
+obs_pop = pd.read_csv('mou_lizonne.0.obs_stack.csv',index_col='real_name')
+
+
+# get heads and re-index with nodes and time steps 
 h_pop = obs_pop.loc[:,obs_pop.columns.str.startswith('h_')].copy()
-h_pop.index.name='real'
-# re-index with nodes and time steps 
 nodes, tsteps=h_pop.columns.str.extract(r'h_(\d*)_n(\d*)').T.values
 h_pop.columns=pd.MultiIndex.from_frame(pd.DataFrame(
     {'tstep':tsteps.astype(int),'node':nodes.astype(int)}))
-
-# multiindex df with time series
-h = h_pop.T.unstack()
+h = h_pop.T.unstack() # multiindex df with time series
 
 # std of min h over obs stack 
-hmin = h.loc[520:].min() # here, the min is on the time series
+hmin = h.loc[520:].min() # min of time series after warm up 
 hstd = hmin.groupby(level='node').std()
 hstd = pd.DataFrame({'std':hstd}).merge(aqpumpcells[['x','y','layer']],left_index=True,right_index=True)
 
-axs = hstd.hist(column='std',by='layer')
-axs[0,0].figure.savefig(os.path.join('pproc','uncert_hist.pdf'),dpi=300)
 
-# convert 
+# convert to geopandas 
 hstd_gdf = gpd.GeoDataFrame(hstd,
-                       geometry = gpd.points_from_xy(hstd.x, 
+                       geometry = gpd.points_from_xy(hstd.x,
                                                      hstd.y),
                        crs = 2154)
 
@@ -530,22 +539,66 @@ basin_shp = os.path.join('..','data','SIG','BassinLizonne.shp')
 basin_gdf = gpd.read_file(basin_shp)
 
 # plot map
-fig,axs=plt.subplots(1,3,figsize=(8,5))
-vmin,vmax= 0,round(hstd['std'].max(),-1) # round
-for i,l in enumerate([2,4,6]):
+layer_dic = {2:'COST',4:'TURO',6:'CENO'}
+#layer_dic = {1:'COST',3:'TURO',5:'CENO'}
+
+
+# plot
+fig,axs=plt.subplots(2,2,figsize=(0.84*dbcol_width,0.6*dbcol_width))
+
+# uncertainties on total deficit
+stack_size = obs_pop.shape[0]
+ecdf = pd.Series(np.arange(1,stack_size+1)/stack_size,index=obs_pop['deficit_tot'].sort_values().values)
+ax = axs[1,1]
+ax = obs_pop['deficit_tot'].hist(ax=ax,color='grey',grid=False)
+ax.set_ylabel('Frequency (counts)')
+ax.set_xlabel(' [m$^3$]')
+ax.set_title('(d) Total River Deficit')
+twax = ax.twinx()
+twax.plot(ecdf)
+twax.axvline(obs_pop.loc['ffpt_center','deficit_tot'],ls='--',color='green',label='Center')
+twax.plot(ecdf,color='red',label='CDF')
+twax.set_ylabel('Cumulative density')
+twax.set_ylim(0,1)
+twax.legend(loc='upper right',bbox_to_anchor=(0.99,0.7))
+ax.set_box_aspect(0.85)
+
+# uncertainties map for heads 
+vmin,vmax= 0,15 #to improve readability
+for l,ax,label in zip([2,4,6],axs.ravel()[:3],['a','b','c']):
     ax=hstd_gdf.loc[hstd_gdf.layer==l].plot(marker='o',
                                      column='std',
                                        vmin=vmin,
                                        vmax=vmax,
-                                     edgecolor='black',
-                                     ax=axs[i])
-    #ax.legend(title=f'Layer {l}',frameon=False,fontsize=7)
-    ax = basin_gdf.boundary.plot(ax=ax,color='black')    
-    ax.set_title(f'Layer {l}')
+                                       edgecolor='k',
+                                     ax=ax)
+    ax = basin_gdf.boundary.plot(ax=ax,color='black',linewidth=1)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_xlabel('X (eastward)')
+    ax.set_ylabel('Y (northward)')
+    ax.set_title(f'({label}) {layer_dic[l]} Aquifer')
+    ax.add_artist(ScaleBar(1))
 
-fig.tight_layout()
-cax = fig.add_axes([0.25,0.2,0.4,0.03])
-fig.colorbar(axs[0].get_children()[0],cax,orientation='horizontal', label='std of min sim. head [m]')
+#fig.tight_layout()
+cax = fig.add_axes([0.1,0.2,0.02,0.6]) # left, bot, width, height
+cmap = fig.colorbar(axs[0,0].get_children()[0],cax,orientation='vertical', label='Standard deviation of minimum head [m]')
+
+cax.set_yticks(np.arange(vmin,vmax+1,5))
+ytlbls = cax.get_yticklabels()
+ytlbls[-1].set_text('>15')
+cax.set_yticklabels(ytlbls)
+cax.yaxis.set_ticks_position('left')
+cax.yaxis.set_label_position('left')
+
+
+# set the spacing between subplots
+fig.subplots_adjust(left=0.10)
+fig.subplots_adjust(wspace=0.)
+fig.subplots_adjust(hspace=0.30)
+fig.subplots_adjust(right=0.95)
+fig.subplots_adjust(bottom=0.10)
+fig.subplots_adjust(top=0.925)
 
 fig.savefig(os.path.join('pproc','uncert_maps.pdf'),dpi=300)
 

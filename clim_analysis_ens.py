@@ -4,7 +4,9 @@ import pandas as pd
 from matplotlib import pyplot as plt 
 from matplotlib.lines import Line2D
 plt.rc('font', family='serif', size=11)
-
+sgcol_width = 9/2.54
+mdcol_width = 14/2.54
+dbcol_width = 19/2.54
 
 # --- define "historical" and "future" periods, and subset
 # DRIAS "reference period for historical climate"
@@ -86,7 +88,7 @@ fclimy = climy.loc[(climy.index >=fper_start) & (climy.index <= fper_end)].stack
 # cm colors 
 clist = ['darkgreen','red','purple','royalblue']
 
-fig,axs=plt.subplots(4,1,sharex=True,figsize=(10,7))
+fig,axs=plt.subplots(4,1,sharex=True,figsize=(dbcol_width,0.7*dbcol_width))
 # ---- total precip
 ptot=climy.xs('ptot',1,1)
 ptot.plot(style='+',ax=axs[0],color='black',lw=0.5,ms=3, alpha=0.5,legend=False)
@@ -137,7 +139,7 @@ fig.savefig(os.path.join('figs','long_term_records.pdf'),dpi=300)
 
 # ---------- plot histograms and box plot for all scenarios ------------
 
-fig, axs = plt.subplots(2,4, figsize=(9, 4), sharex='col', # Common x-axis
+fig, axs = plt.subplots(2,4, figsize=(dbcol_width, 0.44*dbcol_width), sharex='col', # Common x-axis
                        gridspec_kw={"height_ratios": (.7, .3)})
 
 labels_dic = {'ptot':'Ptot','pet':'PET','runoff':'Runoff','rech':'Recharge'}
@@ -171,6 +173,15 @@ for i, col in enumerate(['ptot','pet','runoff','rech']):
 
 axs[0,0].legend(loc='upper left')
 axs[1,0].set_yticklabels(['fut','hist.'])
+
+# share_y for histograms
+haxs = axs[0,:]
+for ax in haxs : ax.set_ylim(0,230)
+
+for ax in haxs[1:] : ax.set_yticklabels([])
+
+haxs[0].set_ylabel('[mm/y]')  
+
 fig.tight_layout()
 
 fig.savefig(os.path.join('figs','cf_allvars.pdf'),dpi=300)

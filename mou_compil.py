@@ -14,9 +14,10 @@ from matplotlib.lines import Line2D
 import matplotlib 
 import kneed 
 
-
-plt.rc('font', family='serif', size=11)
-
+plt.rc('font', family='serif', size=9)
+sgcol_width = 9/2.54
+mdcol_width = 14/2.54
+dbcol_width = 19/2.54
 
 # ----------------------------------------------------
 # pproc mou  : last generation pareto with fac1 config
@@ -31,7 +32,7 @@ def plot_pareto(master_dir, gen, label, color, marker, ax, is_feasible=False):
         feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1, axis=1),:]
     df = feas_front_df.loc[feas_front_df.generation==gen,:]
     # non-dominated realizations (pareto)
-    pax = ax.scatter(df.loc[:,'deficit_tot'],df.loc[:,'tot_pump'],
+    pax = ax.scatter(df.loc[:,'deficit_tot']*1e-6,df.loc[:,'tot_pump']*1e-6,
                marker=marker,s=60,color=color,label=label,alpha=0.8)
     # knee point (maximum curvature along pareto front)
     sdf = df.sort_values('deficit_tot')
@@ -61,16 +62,16 @@ marker_dic = {'Q5':'^','Q50':'o','Q95':'v'}
 
 #master_dirs = ['sim_Q50_1978_5','sim_Q50_2076_1','sim_Q5_1981_2','sim_Q5_2079_11','sim_Q95_2003_5','sim_Q95_2069_17']
 
-master_dirs = ['master_sim_Q5_1981_2','master_sim_Q5_2079_11','master_sim_Q50_1978_5']
+master_dirs=['master_sim_Q5_1981_2','master_sim_Q5_2079_11','master_sim_Q50_1978_5','master_sim_Q50_2076_1','master_sim_Q95_2003_5','master_sim_Q95_2069_17']
 
-fig,ax = plt.subplots(1,1,figsize=(5,5))
+fig,ax = plt.subplots(1,1,figsize=(sgcol_width,sgcol_width))
 for master_dir in master_dirs:
     year = int(master_dir.split('_')[-2])
     qt = master_dir.split('_')[-3]
     prefix = 'hist.' if year < 2005 else 'fut.'
     color = 'grey' if year < 2005 else 'tan'
     marker=marker_dic[qt]
-    plot_pareto(master_dir, gen=9, label=f'{prefix}-{qt}', color=color, marker=marker, ax=ax)
+    plot_pareto(master_dir, gen=10, label=f'{prefix}-{qt}', color=color, marker=marker, ax=ax)
 
 
 
@@ -86,8 +87,8 @@ fac1_pump = fac1_rei.loc['tot_pump','modelled']
 fac1_deficit = fac1_rei.loc['deficit_tot','modelled']
 f1lax = ax.axhline(fac1_pump,color='black',lw=0.5,ls='--')
 
-ax.text(1e5,fac0_pump+2e5,'$f=0$',c='black')
-ax.text(1e5,fac1_pump+2e5,'$f=1$',c='black')
+ax.text(2.6e6,fac0_pump+1e5,'$f=0$',c='black')
+ax.text(2.6e6,fac1_pump+1e5,'$f=1$',c='black')
 
 # legend
 q95_label = Line2D([0], [0], label='Q95', marker=None, linestyle= '')
@@ -114,21 +115,20 @@ ax.legend(handles=[q95_label, q50_label, q05_label,
                   fut_q95_marker,fut_q50_marker,fut_q05_marker],
           columnspacing=1., handletextpad=0, handlelength=1.,borderaxespad=0.5,
           title = '              Hist. Fut. ',
-     loc='lower right', ncols=3)
+     loc='lower right',fontsize=7, ncols=3)
 
-ax.set_ylim([0,3e7])
-ax.set_xlim([0,1.2e7])
-ax.set_xlabel('Total river deficit [m$^3$]')
-ax.set_ylabel('Total pumping [m$^3$]')
+ax.set_ylim([0,3.1e7])
+ax.set_xlim([0,9e6])
+ax.set_xlabel('Total river deficit [Mm$^3$]')
+ax.set_ylabel('Total pumping [Mm$^3$]')
 fig.tight_layout()
 fig.savefig(os.path.join('figs',f'comp_pareto.pdf'),dpi=300)
 
 # --------------------------------------------------
 # compare pre-defined risk, with risk as an objective 
 
-'''
-fig,ax = plt.subplots(1,1,figsize=(6,5))
-pasum_df = pd.read_csv(os.path.join('pproc_master_simrisk_Q50_1986_7','mou_lizonne.pareto.archive.summary.csv'))
+fig,ax = plt.subplots(1,1,figsize=(sgcol_width,sgcol_width))
+pasum_df = pd.read_csv(os.path.join('master_simrisk_Q50_1978_5','mou_lizonne.pareto.archive.summary.csv'))
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
 gen=feas_front_df.generation.max()
 df = feas_front_df.loc[feas_front_df.generation==gen,:]
@@ -138,17 +138,16 @@ pax = ax.scatter(df.loc[:,'deficit_tot'],df.loc[:,'tot_pump'],c=df.loc[:,'_risk_
 
 fig.colorbar(pax, label='Reliability')
 
-pasum_df = pd.read_csv(os.path.join('pproc_master_sim_Q50_1986_7','mou_lizonne.pareto.archive.summary.csv'))
+pasum_df = pd.read_csv(os.path.join('master_sim_Q50_1978_5','mou_lizonne.pareto.archive.summary.csv'))
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
 gen=feas_front_df.generation.max()
 df = feas_front_df.loc[feas_front_df.generation==gen,:]
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
-pax = ax.scatter(df.loc[:,'deficit_tot'],df.loc[:,'tot_pump'],c='none',
+pax = ax.scatter(df.loc[:,'deficit_tot']*1e-6,df.loc[:,'tot_pump']*1e-6,c='none',
                   marker='o',ec='darkgreen',s=60,label='opt_risk=0.66',alpha=1)
 
-ax.set_xlabel('Total river deficit [m$^3$]')
-ax.set_ylabel('Total pumping [m$^3$]')
+ax.set_xlabel('Total river deficit [Mm$^3$]')
+ax.set_ylabel('Total pumping [Mm$^3$]')
 fig.tight_layout()
-fig.savefig(os.path.join('figs',f'pareto_risk_as_objective.png'),dpi=300)
+fig.savefig(os.path.join('figs',f'pareto_risk_as_objective.pdf'),dpi=300)
 
-'''
