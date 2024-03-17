@@ -23,7 +23,6 @@ dbcol_width = 19/2.54
 # pproc mou  : last generation pareto with fac1 config
 # ----------------------------------------------------
 
-
 def plot_pareto(master_dir, gen, label, color, marker, ax, is_feasible=False):
     pasum_df = pd.read_csv(os.path.join(master_dir,'mou_lizonne.pareto.archive.summary.csv'))
     if is_feasible:
@@ -43,16 +42,16 @@ def plot_pareto(master_dir, gen, label, color, marker, ax, is_feasible=False):
             direction='increasing',
             interp_method='interp1d',
         )
-    kax = ax.scatter(kn.knee,kn.knee_y,marker=marker, edgecolor='darkred', alpha=0.8, color=color,s=60, label='Knee point')
+    kax = ax.scatter(kn.knee*1e-6,kn.knee_y*1e-6,marker=marker, edgecolor='darkred', alpha=0.8, color=color,s=60, label='Knee point')
     # no pumping (fac=0)
     fac0_rei = pyemu.pst_utils.read_resfile(os.path.join(master_dir,'mou_lizonne_fac0.base.rei'))
-    fac0_pump = fac0_rei.loc['tot_pump','modelled']
-    fac0_deficit = fac0_rei.loc['deficit_tot','modelled']
+    fac0_pump = fac0_rei.loc['tot_pump','modelled']*1e-6
+    fac0_deficit = fac0_rei.loc['deficit_tot','modelled']*1e-6
     f0ax = ax.scatter(fac0_deficit,fac0_pump,marker=marker,edgecolor='black',color=color,s=60,label='Factor=0')
     # historical reference (fac=1)
     fac1_rei = pyemu.pst_utils.read_resfile(os.path.join(master_dir,'mou_lizonne_fac1.base.rei'))
-    fac1_pump = fac1_rei.loc['tot_pump','modelled']
-    fac1_deficit = fac1_rei.loc['deficit_tot','modelled']
+    fac1_pump = fac1_rei.loc['tot_pump','modelled']*1e-6
+    fac1_deficit = fac1_rei.loc['deficit_tot','modelled']*1e-6
     f1ax = ax.scatter(fac1_deficit,fac1_pump,marker=marker,edgecolor='black',color=color,alpha=0.8,s=60,label='Factor=1')
 
 
@@ -78,49 +77,51 @@ for master_dir in master_dirs:
 # lines 
 
 fac0_rei = pyemu.pst_utils.read_resfile(os.path.join(master_dir,'mou_lizonne_fac0.base.rei'))
-fac0_pump = fac0_rei.loc['tot_pump','modelled']
-fac0_deficit = fac0_rei.loc['deficit_tot','modelled']
+fac0_pump = fac0_rei.loc['tot_pump','modelled']*1e-6
+fac0_deficit = fac0_rei.loc['deficit_tot','modelled']*1e-6
 f0lax = ax.axhline(fac0_pump,color='black',lw=0.5,ls='--')
 # historical reference (fac=1)
 fac1_rei = pyemu.pst_utils.read_resfile(os.path.join(master_dir,'mou_lizonne_fac1.base.rei'))
-fac1_pump = fac1_rei.loc['tot_pump','modelled']
-fac1_deficit = fac1_rei.loc['deficit_tot','modelled']
+fac1_pump = fac1_rei.loc['tot_pump','modelled']*1e-6
+fac1_deficit = fac1_rei.loc['deficit_tot','modelled']*1e-6
 f1lax = ax.axhline(fac1_pump,color='black',lw=0.5,ls='--')
 
-ax.text(2.6e6,fac0_pump+1e5,'$f=0$',c='black')
-ax.text(2.6e6,fac1_pump+1e5,'$f=1$',c='black')
+ax.text(4.3,fac0_pump+0.2,'$f=0$',c='black')
+ax.text(6.7,fac1_pump+0.2,'$f=1$',c='black')
 
 # legend
-q95_label = Line2D([0], [0], label='Q95', marker=None, linestyle= '')
-q50_label = Line2D([0], [0], label='Q50', marker=None, linestyle= '')
-q05_label = Line2D([0], [0], label='Q05', marker=None, linestyle= '')
+q95_label = Line2D([0], [0], label='Q95', markersize=1, marker=None, linestyle= '')
+q50_label = Line2D([0], [0], label='Q50', markersize=1, marker=None, linestyle= '')
+q05_label = Line2D([0], [0], label='Q05', markersize=1, marker=None, linestyle= '')
 
 hist_q05_marker = Line2D([0], [0], label='', marker='^',
-    markersize=10, markeredgecolor='black', markerfacecolor='grey', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='grey', linestyle='')
 hist_q50_marker = Line2D([0], [0], label='', marker='o',
-    markersize=10, markeredgecolor='black', markerfacecolor='grey', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='grey', linestyle='')
 hist_q95_marker = Line2D([0], [0], label='', marker='v',
-    markersize=10, markeredgecolor='black', markerfacecolor='grey', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='grey', linestyle='')
 
 fut_q05_marker = Line2D([0], [0], label='', marker='^',
-    markersize=10, markeredgecolor='black', markerfacecolor='tan', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='tan', linestyle='')
 fut_q50_marker = Line2D([0], [0], label='', marker='o',
-    markersize=10, markeredgecolor='black', markerfacecolor='tan', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='tan', linestyle='')
 fut_q95_marker = Line2D([0], [0], label='', marker='v',
-    markersize=10, markeredgecolor='black', markerfacecolor='tan', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='tan', linestyle='')
 
 
-ax.legend(handles=[q95_label, q50_label, q05_label,
+lg = ax.legend(handles=[q95_label, q50_label, q05_label,
                     hist_q95_marker,hist_q50_marker,hist_q05_marker,
                   fut_q95_marker,fut_q50_marker,fut_q05_marker],
-          columnspacing=1., handletextpad=0, handlelength=1.,borderaxespad=0.5,
-          title = '              Hist. Fut. ',
+          columnspacing=1., handlelength=1.,
+          title = '        Hist.  Fut.',
      loc='lower right',fontsize=7, ncols=3)
 
-ax.set_ylim([0,3.1e7])
-ax.set_xlim([0,9e6])
-ax.set_xlabel('Total river deficit [Mm$^3$]')
-ax.set_ylabel('Total pumping [Mm$^3$]')
+plt.setp(lg.get_title(),fontsize=8)
+
+ax.set_ylim([0,32])
+ax.set_xlim([0,9])
+ax.set_xlabel('Total River Deficit [Mm$^3$]')
+ax.set_ylabel('Total Pumping [Mm$^3$]')
 fig.tight_layout()
 fig.savefig(os.path.join('figs',f'comp_pareto.pdf'),dpi=300)
 
@@ -133,21 +134,27 @@ feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_
 gen=feas_front_df.generation.max()
 df = feas_front_df.loc[feas_front_df.generation==gen,:]
 # non-dominated realizations (pareto)
-pax = ax.scatter(df.loc[:,'deficit_tot'],df.loc[:,'tot_pump'],c=df.loc[:,'_risk_'],
-                 cmap='seismic_r',vmin=0,vmax=1, marker='o',ec='black',s=60,label='risk as an objective',alpha=1)
+pax = ax.scatter(df.loc[:,'deficit_tot']*1e-6,df.loc[:,'tot_pump']*1e-6,c=df.loc[:,'_risk_'],
+                 cmap='seismic_r',vmin=0,vmax=1, marker='o',ec='black',s=60,alpha=1)
 
-fig.colorbar(pax, label='Reliability')
+cax = fig.colorbar(pax, label='Reliability',orientation='horizontal',
+             cax=ax.inset_axes((0.4, 0.30, 0.5, 0.05)))
 
 pasum_df = pd.read_csv(os.path.join('master_sim_Q50_1978_5','mou_lizonne.pareto.archive.summary.csv'))
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
 gen=feas_front_df.generation.max()
 df = feas_front_df.loc[feas_front_df.generation==gen,:]
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
-pax = ax.scatter(df.loc[:,'deficit_tot']*1e-6,df.loc[:,'tot_pump']*1e-6,c='none',
-                  marker='o',ec='darkgreen',s=60,label='opt_risk=0.66',alpha=1)
+pax = ax.scatter(df.loc[:,'deficit_tot']*1e-6,df.loc[:,'tot_pump']*1e-6,c='grey',
+                  marker='o',s=60,alpha=0.9, label='Specified reliability at 0.66')
 
-ax.set_xlabel('Total river deficit [Mm$^3$]')
-ax.set_ylabel('Total pumping [Mm$^3$]')
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(handles=handles,labels=labels,loc='upper right',bbox_to_anchor=(1,0.125),fontsize=8)
+
+ax.set_xlabel('Total River Deficit [Mm$^3$]')
+ax.set_ylabel('Total Pumping [Mm$^3$]')
+ax.set_ylim([0,32])
+ax.set_xlim([0,9])
 fig.tight_layout()
 fig.savefig(os.path.join('figs',f'pareto_risk_as_objective.pdf'),dpi=300)
 

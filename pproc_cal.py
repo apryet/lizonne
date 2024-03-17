@@ -94,7 +94,6 @@ for istep, mf in mfs.data['CHARGE'].items():
 
 # --------------  compute and plot indicators 
 
-
 # load DOE data
 doe_file = os.path.join('..','data','DOE','DOE.xlsx')
 doe_df = pd.read_excel(doe_file,index_col='id')
@@ -126,7 +125,9 @@ def get_qriv_alerts(q_df):
     # identify periods with flow discharge below threshold levels
     qcrise_df    = q_df.le(doe_df['crise'])
     qrenforce_df = q_df.le(doe_df['renforce'])*(~qcrise_df)
-    qalerte_df   = q_df.le(doe_df['alerte'])*(~qrenforce_df)*(~qcrise_df)
+    #qalerte_df   = q_df.le(doe_df['alerte'])*(~qrenforce_df)*(~qcrise_df)
+    # focus on alert 
+    qalerte_df   = q_df.le(doe_df['alerte'])*(~qrenforce_df)*(~qcrise_df) 
     # concatenate all types of alerts
     qalerts_df = pd.concat( [qalerte_df, qrenforce_df, qcrise_df],axis=1,
                          keys=['alerte','renforce','crise'],
