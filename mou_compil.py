@@ -24,7 +24,7 @@ dbcol_width = 19/2.54
 # ----------------------------------------------------
 
 def plot_pareto(master_dir, gen, label, color, marker, ax, is_feasible=False):
-    pasum_df = pd.read_csv(os.path.join(master_dir,'mou_lizonne.pareto.summary.csv'))
+    pasum_df = pd.read_csv(os.path.join(master_dir,'mou_lizonne.pareto.archive.summary.csv'))
     if is_feasible:
         feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
     else:  
@@ -86,8 +86,8 @@ fac1_pump = fac1_rei.loc['tot_pump','modelled']*1e-6
 fac1_deficit = fac1_rei.loc['deficit_tot','modelled']*1e-6
 f1lax = ax.axhline(fac1_pump,color='black',lw=0.5,ls='--')
 
-ax.text(4.5,fac0_pump+0.1,'$f=0$',c='black')
-ax.text(6.5,fac1_pump+0.1,'$f=1$',c='black')
+ax.text(4.3,fac0_pump+0.2,'$f=0$',c='black')
+ax.text(6.7,fac1_pump+0.2,'$f=1$',c='black')
 
 # legend
 q95_label = Line2D([0], [0], label='Q95', markersize=1, marker=None, linestyle= '')
@@ -135,18 +135,21 @@ gen=feas_front_df.generation.max()
 df = feas_front_df.loc[feas_front_df.generation==gen,:]
 # non-dominated realizations (pareto)
 pax = ax.scatter(df.loc[:,'deficit_tot']*1e-6,df.loc[:,'tot_pump']*1e-6,c=df.loc[:,'_risk_'],
-                 cmap='seismic_r',vmin=0,vmax=1, marker='o',ec='black',s=60,label='risk as an objective',alpha=1)
+                 cmap='seismic_r',vmin=0,vmax=1, marker='o',ec='black',s=60,alpha=1)
 
-fig.colorbar(pax, label='Reliability',orientation='horizontal',
-             cax=ax.inset_axes((0.4, 0.20, 0.5, 0.05)))
+cax = fig.colorbar(pax, label='Reliability',orientation='horizontal',
+             cax=ax.inset_axes((0.4, 0.30, 0.5, 0.05)))
 
 pasum_df = pd.read_csv(os.path.join('master_sim_Q50_1978_5','mou_lizonne.pareto.archive.summary.csv'))
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
 gen=feas_front_df.generation.max()
 df = feas_front_df.loc[feas_front_df.generation==gen,:]
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
-pax = ax.scatter(df.loc[:,'deficit_tot']*1e-6,df.loc[:,'tot_pump']*1e-6,c='none',
-                  marker='o',ec='darkgreen',s=60,label='opt_risk=0.66',alpha=1)
+pax = ax.scatter(df.loc[:,'deficit_tot']*1e-6,df.loc[:,'tot_pump']*1e-6,c='grey',
+                  marker='o',s=60,alpha=0.9, label='Specified reliability at 0.66')
+
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(handles=handles,labels=labels,loc='upper right',bbox_to_anchor=(1,0.125),fontsize=8)
 
 ax.set_xlabel('Total River Deficit [Mm$^3$]')
 ax.set_ylabel('Total Pumping [Mm$^3$]')

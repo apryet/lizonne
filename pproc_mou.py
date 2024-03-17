@@ -47,25 +47,23 @@ opt_gen = 10
 pst = pyemu.Pst('mou_lizonne.pst')
 
 # summary of pareto dominant solutions for each generation
-pasum_df = pd.read_csv('mou_lizonne.pareto.summary.csv')
+pasum_df = pd.read_csv('mou_lizonne.pareto.archive.summary.csv')
 feas_front_df = pasum_df.loc[pasum_df.apply(lambda x: x.nsga2_front==1 and x.is_feasible==1,axis=1),:]
 feas_front_members = feas_front_df.loc[feas_front_df.generation==opt_gen,'member'].values
 ngen = feas_front_df.generation.unique().shape[0]
 
 cmap = matplotlib.colormaps.get_cmap('gist_heat').reversed()
 
-fig,ax = plt.subplots(1,1,figsize=(6,6))
+fig,ax = plt.subplots(1,1,figsize=(sgcol_width,sgcol_width))
 objs = pst.pestpp_options["mou_objectives"].split(',')
 for gen in range(ngen):
     df = feas_front_df.loc[feas_front_df.generation==gen,:]
-    sc = ax.scatter(df.loc[:,objs[0]],df.loc[:,objs[1]],c=df.loc[:,'generation'],vmin=0,vmax=ngen,
+    sc = ax.scatter(df.loc[:,objs[0]]*1e-6,df.loc[:,objs[1]]*1e-6,c=df.loc[:,'generation'],vmin=0,vmax=ngen,
                cmap=cmap,marker="o", 
                label=f'gen. {gen}')
 
-cbar = fig.colorbar(sc)
-cbar.ax.get_yaxis().labelpad = 15
-cbar.ax.set_ylabel('Generations', rotation=270)
-
+cbar = fig.colorbar(sc, label='Generations',orientation='horizontal',
+             cax=ax.inset_axes((0.4, 0.20, 0.5, 0.05)))
 
 # had to do 2 seperate loops for knee points to appear on the foreground 
 for gen in range(ngen):
@@ -83,23 +81,26 @@ for gen in range(ngen):
     if  kn.knee is None :
         print(f'Could not identify knee point for gen {gen}')
         continue
-    dmds = ax.scatter(kn.knee,kn.knee_y,color='blue',
+    dmds = ax.scatter(kn.knee*1e-6,kn.knee_y*1e-6,color='blue',
                marker="D",s=80,label='knee point')
-    ax.annotate(gen,(kn.knee,kn.knee_y),ha='center',va='center',
+    ax.annotate(gen,(kn.knee*1e-6,kn.knee_y*1e-6),ha='center',va='center',
                 color='white',fontsize=8,)
 
 # fac1 configuration for comparative purpose 
-pfac1 = ax.scatter(fac1_deficit,fac1_pump,marker="+", edgecolor='black',color='black',s=60)
+pfac1 = ax.scatter(fac1_deficit*1e-6,fac1_pump*1e-6,marker="+", edgecolor='black',color='black',s=60)
 
 ax.legend([dmds,pfac1],['knee points','Factor=1'])
-ax.set_xlabel('Total deficit [m$^3$]')
-ax.set_ylabel('Total pumping [m$^3$]')
+ax.set_xlabel('Total deficit [Mm$^3$]')
+ax.set_ylabel('Total pumping [Mm$^3$]')
+'''
 ax.set_xlim(feas_front_df.loc[:,objs[0]].min(),
                       feas_front_df.loc[:,objs[0]].max())
 ax.set_ylim(feas_front_df.loc[:,objs[1]].min(),
                       feas_front_df.loc[:,objs[1]].max())
-
-
+ax.set_ylim([0,32])
+ax.set_xlim([0,9])
+'''
+fig.tight_layout()
 fig.savefig(os.path.join('pproc','allgens_pareto.pdf'), dpi=300)
 
 # ---------------------------------------------
@@ -357,11 +358,6 @@ fig.text(0.008,0.49,'(b)',fontsize=14,transform=fig.transFigure)
 
 fig.savefig(os.path.join('pproc',f'pareto_rivpumpfac.pdf'),dpi=300)
 
-i
-
-
-
-
 
 # ---------------------------------------------
 # objective values at knee point  
@@ -544,19 +540,21 @@ layer_dic = {2:'COST',4:'TURO',6:'CENO'}
 
 
 # plot
-fig,axs=plt.subplots(2,2,figsize=(0.84*dbcol_width,0.6*dbcol_width))
+fig,axs=plt.subplots(2,2,figsize=(0.80*dbcol_width,0.60*dbcol_width))
 
 # uncertainties on total deficit
-stack_size = obs_pop.shape[0]
-ecdf = pd.Series(np.arange(1,stack_size+1)/stack_size,index=obs_pop['deficit_tot'].sort_values().values)
-ax = axs[1,1]
-ax = obs_pop['deficit_tot'].hist(ax=ax,color='grey',grid=False)
+deficit_tot = obs_pop['deficit_tot'].div(1e6) # Mm3
+stack_size = deficit_tot.shape[0]
+ecdf = pd.Series(np.arange(1,stack_size+1)/stack_size,index=deficit_tot.sort_values().values)
+ax = axs[0,0]
+ax = deficit_tot.hist(ax=ax,color='grey',grid=False)
 ax.set_ylabel('Frequency (counts)')
-ax.set_xlabel(' [m$^3$]')
-ax.set_title('(d) Total River Deficit')
+ax.set_xlabel('Mm$^3$')
+ax.set_title('(a) Total River Deficit')
+ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True))
 twax = ax.twinx()
 twax.plot(ecdf)
-twax.axvline(obs_pop.loc['ffpt_center','deficit_tot'],ls='--',color='green',label='Center')
+twax.axvline(deficit_tot.loc['ffpt_center'],ls='--',color='green',label='Center')
 twax.plot(ecdf,color='red',label='CDF')
 twax.set_ylabel('Cumulative density')
 twax.set_ylim(0,1)
@@ -565,7 +563,7 @@ ax.set_box_aspect(0.85)
 
 # uncertainties map for heads 
 vmin,vmax= 0,15 #to improve readability
-for l,ax,label in zip([2,4,6],axs.ravel()[:3],['a','b','c']):
+for l,ax,label in zip([2,4,6],axs.ravel()[1:],['b','c','d']):
     ax=hstd_gdf.loc[hstd_gdf.layer==l].plot(marker='o',
                                      column='std',
                                        vmin=vmin,
@@ -581,24 +579,22 @@ for l,ax,label in zip([2,4,6],axs.ravel()[:3],['a','b','c']):
     ax.add_artist(ScaleBar(1))
 
 #fig.tight_layout()
-cax = fig.add_axes([0.1,0.2,0.02,0.6]) # left, bot, width, height
-cmap = fig.colorbar(axs[0,0].get_children()[0],cax,orientation='vertical', label='Standard deviation of minimum head [m]')
+cax = fig.add_axes([0.85,0.2,0.02,0.6]) # left, bot, width, height
+cmap = fig.colorbar(axs[1,1].get_children()[0],cax,orientation='vertical', label='Standard deviation of minimum head [m]')
 
 cax.set_yticks(np.arange(vmin,vmax+1,5))
 ytlbls = cax.get_yticklabels()
 ytlbls[-1].set_text('>15')
 cax.set_yticklabels(ytlbls)
-cax.yaxis.set_ticks_position('left')
-cax.yaxis.set_label_position('left')
 
 
 # set the spacing between subplots
-fig.subplots_adjust(left=0.10)
+fig.subplots_adjust(left=0.025)
 fig.subplots_adjust(wspace=0.)
-fig.subplots_adjust(hspace=0.30)
-fig.subplots_adjust(right=0.95)
+fig.subplots_adjust(hspace=0.50)
+fig.subplots_adjust(right=0.90)
 fig.subplots_adjust(bottom=0.10)
-fig.subplots_adjust(top=0.925)
+fig.subplots_adjust(top=0.9)
 
 fig.savefig(os.path.join('pproc','uncert_maps.pdf'),dpi=300)
 

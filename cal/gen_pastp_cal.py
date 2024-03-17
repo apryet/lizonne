@@ -11,7 +11,12 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pyemu
 import geopandas as gpd
-plt.rc('font', family='serif', size=11)
+# plot settings
+plt.rc('font', family='serif', size=9)
+sgcol_width = 9/2.54
+mdcol_width = 14/2.54
+dbcol_width = 19/2.54
+
 
 # -----------------------------------------------------------
 # -- Read model
@@ -554,46 +559,65 @@ with open(pastp_file, 'w', encoding='ISO-8859-1') as f:
 #  write surface and groundwater withdrawals over cal period
 # -----------------------------------------------------------
 
+cal_start = pd.to_datetime('2012-08-01')
+cal_end =pd.to_datetime('2019-07-31')
 surf_bv = 627*1e6 # km2 to m2
-safranm_ss = safranm.loc[(safranm.index>sim_start) & (safranm.index<sim_end)]
-dff_gw_ss = dff_gw.loc[(dff_gw.index>sim_start) & (dff_gw.index<sim_end)].div(surf_bv)*1000
-dff_surf_ss = dff_surf.loc[(dff_surf.index>sim_start) & (dff_surf.index<sim_end)].div(surf_bv)*1000
 
-fig, axs = plt.subplots(3,1, sharex=True,figsize=(12,6))
+safranm_ss = safranm.loc[(safranm.index>cal_start) & (safranm.index<cal_end)]
+dff_gw_ss = dff_gw.loc[(dff_gw.index>cal_start) & (dff_gw.index<cal_end)].div(1e6) #.div(surf_bv)*1000
+dff_surf_ss = dff_surf.loc[(dff_surf.index>cal_start) & (dff_surf.index<cal_end)].div(1e6) #.div(surf_bv)*1000
+
+# plot
+fig, axs = plt.subplots(3,1, sharex=True,figsize=(dbcol_width,0.5*dbcol_width))
 ax0,ax1,ax2=axs
 
+# Unfortunate, pd.bar() does not properly handle dates and plt.bar does not easily handle stacked bars...
+
 # precipitation and evapotranspiration
-ax0 = safranm_ss[['ptot','pet']].plot.bar(legend=False,color=['navy','tan'],ax=ax0)
-# Make most of the ticklabels empty so the labels don't get too crowded
-ax0.xaxis.set_major_formatter(ticker.FixedFormatter(ticklabels))
-ax0.set_ylabel('[mm/month]')
-ax0.set_title('Precipitations and Potential Evapotranspiration')
-ax0.legend(loc='upper right',title=None,labels=['P','PET'])
+ax0 = safranm_ss[['ptot','pet']].plot.bar(legend=False,color=['navy','tan'],width=0.75,ax=ax0)
+ax0.set_ylabel('mm/month')
+ax0.legend(loc='upper right',title=None,fontsize=9,labels=['P','PET'],ncol=2)
+ax0.text(1,185,'a)',fontsize=15)
 
 # groundwater withdrawals
 ax1 = dff_gw_ss.groupby(['use'],axis=1).sum()[['IRRIGATION']].plot.bar(
     stacked=True, legend=False,
     color=['darkgreen'],
     ax=ax1)
-# Make most of the ticklabels empty so the labels don't get too crowded
-ax1.xaxis.set_major_formatter(ticker.FixedFormatter(ticklabels))
-ax1.set_ylabel('[mm/month]')
-ax1.set_title('Groundwater withdrawals')
-ax1.legend(loc='upper right',title=None,labels=['Irrigation'])
+
+ax1.text(1,1.65,'b)',fontsize=15)
+ax1.text(22,1.40,'Surface\nwithdrawals',ha='center',fontsize=10)
+ax1.set_ylabel('Mm$^3$/month')
+#ax1.set_title('Groundwater withdrawals',fontsize=9)
+ax1.legend(loc='upper right',fontsize=9,labels=['Irrigation'])
 
 # surface withdrawals
 ax2 = dff_surf_ss.groupby(['use'],axis=1).sum()[['INDUSTRIEL','IRRIGATION','AEP']].plot.bar(
         stacked=True, legend=False,
         color = ['darkorange','darkgreen','blue'],
         ax=ax2)
-ticklabels = [d.strftime('%m-%Y') if d.month==1 else '' for d in dff_gw_ss.index]
-ax2.xaxis.set_major_formatter(ticker.FixedFormatter(ticklabels))
-ax2.set_ylabel('[mm/month]')
-ax2.set_title('Surface withdrawals')
-ax2.legend(loc='upper right', title=None, labels=['Industrial','Irrigation','Drinking water'])
-plt.gcf().autofmt_xdate()
+
+ax2.text(1,0.85,'c)',fontsize=15)
+ax2.text(22,0.65,'Groundwater\nwithdrawals',ha='center',fontsize=10)
+
+ax2.set_ylabel('Mm$^3$/month')
+#ax2.set_title('Surface withdrawals',fontsize=9, y=1.0, pad=-14)
+ax2.legend(loc='upper right',fontsize=9, labels=['Industrial','Irrigation','Drinking'],ncol=1)
+
+# align y labels
+fig.align_ylabels(axs)
+
+# Make most of the ticklabels empty so the labels don't get too crowded
+ax2.set_xticks([])
+ax2.set_xticks([],minor=True)
+ticklocs = [i for i,d in enumerate(dff_gw_ss.index) if d.month==1]
+ticklabels = [d.strftime('%Y-%m') for d in dff_gw_ss.index if d.month==1]
+ax2.set_xticks(ticklocs,ticklabels,rotation=30, ha='right')
+mticklocs = [i for i in range(dff_gw_ss.shape[0])]
+_  = ax2.set_xticks(mticklocs,minor=True)
 fig.tight_layout()
-fig.savefig(os.path.join('figs','q_surf_gw_records.png'),dpi=300)
+
+fig.savefig(os.path.join('figs','q_surf_gw_records.pdf'),dpi=300)
 
 
 # -----------------------------------------------------------

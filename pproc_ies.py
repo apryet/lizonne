@@ -8,9 +8,13 @@ from pymarthe.utils import marthe_utils, shp_utils, pest_utils, pp_utils
 from pymarthe.mfield import MartheField, MartheFieldSeries
 from pymarthe.helpers.postprocessing import PestPostProcessing
 import matplotlib.pyplot as plt
+import matplotlib
 from matplotlib.lines import Line2D
 # plot settings
-plt.rc('font', family='serif', size=11)
+plt.rc('font', family='serif', size=9)
+sgcol_width = 9/2.54
+mdcol_width = 14/2.54
+dbcol_width = 19/2.54
 
 # ---------------------------------------------
 # load pst and observation data from .config  
@@ -204,7 +208,7 @@ def get_og_ts(oe,onames,odates, trans):
 def plot_tseries_ensembles(pr_oe, pt_oe, obswns, ognmes, ogdates, trans=None, ylabel='',legend=True ):
     # get the observation data from the control file and select 
     obs = pst.observation_data.copy()
-    fig,axes = plt.subplots(len(ognmes),1,sharex=True,figsize=(10,10))
+    fig,axes = plt.subplots(len(ognmes),1,sharex=True,figsize=(dbcol_width,0.8*dbcol_width))
     if trans==None:
         trans=[lambda x : x]*len(ognmes)
     if not type(trans)==list:
@@ -272,29 +276,44 @@ fig.savefig(os.path.join('pproc','fpt_hsimobs.png'),dpi=300)
 obslocs = pd.read_excel(os.path.join('..','data','SIG','obsloc_labels.xlsx'),index_col='id')
 locs = ['P8284010','P7250001','07333X0027','07346X0017']
 labels = obslocs.loc[locs].label
-units = ['River discharge [m$^3$/s]']*2 + ['Water level [m NGF]']*2
+units = ['m$^3$/s']*2 + ['m a.s.l.']*2
 trans = [lambda x : 10**x,lambda x : 10**x,lambda x : x,lambda x : x]
 
 fig = plot_tseries_ensembles(None, fpt_oe, obswns , locs, ogdates,trans=trans, ylabel='',legend=False)
 
+cal_start = pd.to_datetime('2012-08-01')
+cal_end =pd.to_datetime('2019-07-31')
+
+fig.axes[0].set_xlim(cal_start,cal_end)
+fig.axes[0].set_xticks([])
+fig.axes[0].set_xticks([],minor=True)
+fig.axes[0].xaxis.set_major_locator(matplotlib.dates.MonthLocator(bymonth=1,bymonthday=1))
+fig.axes[0].xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m'))
+fig.axes[0].xaxis.set_minor_locator(matplotlib.dates.MonthLocator())
+fig.axes[-1].tick_params(axis='x', which='major', pad=0)
+
 for ax,unit,label in zip(fig.axes,units,labels):
     ax.set_ylabel(unit)
-    ax.set_title(label,loc="left")
+    ax.set_title(f' {label}',loc="left",y=0.80)
+
 
 fig.axes[0].set_ylim(0,45)
 fig.axes[1].set_ylim(0,5)
-#fig.axes[2].set_ylim(80,140)
+fig.axes[2].set_ylim(94,135)
 #fig.axes[3].set_ylim(100,175)
 
-lpt = Line2D([0], [0], label='Sim. posterior', color='red')
-lbase = Line2D([0], [0], label='Sim. base', color='green')
-lobs = Line2D([0], [0], label='Observed', color='black')
+lpt = Line2D([0], [0], label='Posterior', color='red')
+lbase = Line2D([0], [0], label='Center', color='green')
+lobs = Line2D([0], [0], label='Obs.', color='black')
 lobsn = Line2D([0], [0], label='Obs.+noise', color='blue')
-fig.axes[0].legend(handles=[lpt,lbase,lobs,lobsn],loc='upper left',ncols=4)
+fig.axes[0].legend(handles=[lpt,lbase,lobs,lobsn],loc='upper right',ncols=4,fontsize=11)
 fig.axes[0].margins(x=0)
+fig.align_ylabels()
 fig.tight_layout()
+fig.subplots_adjust(hspace=0.10)
 
 fig.savefig(os.path.join('pproc','fpt_q_and_h_simobs.png'),dpi=150)
+fig.savefig(os.path.join('pproc','fpt_q_and_h_simobs.pdf'),dpi=150)
 
 # ---------------------------------------------
 # final ensemble selection      
@@ -418,21 +437,21 @@ fig.savefig(os.path.join('pproc','ffpt_hsimobs.png'),dpi=300)
 # evolution of phi and hist for last iteration + rsd 
 # ---------------------------------------------
 
-fig, axes = plt.subplots(1, 2, figsize=(10,4),width_ratios=[6,4])
+fig, axes = plt.subplots(1, 2, figsize=(dbcol_width,0.4*dbcol_width),width_ratios=[6.5,4])
 # phi evol
 phi_color = 'grey'
 ax = axes[0]
 phi = pd.read_csv(os.path.join(f"{case}.phi.actual.csv"),index_col=0)
 phi.iloc[:,6:].apply(np.log10).plot(legend=False,lw=0.5,color=phi_color,alpha=0.8, ax=ax)
 
-ax.set_ylabel('$log10(\Phi)$')
+ax.set_ylabel('log10($\Phi$)')
 ax.set_xlabel('IES iterations')
 ax.axvline(0,color='grey',ls='--',lw=3,alpha=0.6)
 ax.axvline(3,color='darkred',ls='--',lw=3,alpha=0.6)
-ax.text(0.5,7.4,'(a)',fontsize=25)
+ax.text(0.5,7.4,'a)',fontsize=20)
 
 phi_evol_handle = Line2D([0], [0], label='$\Phi$ (232 realizations)', color=phi_color, marker=None, linestyle= '-')
-ax.legend(handles=[phi_evol_handle], alignment='left', loc='lower left',  bbox_to_anchor=(0.1, 0))
+ax.legend(handles=[phi_evol_handle], alignment='left', loc='lower left',fontsize=9,  bbox_to_anchor=(0.08, 0))
 
 # rsd 
 twax= ax.twinx()
@@ -440,39 +459,38 @@ rsd_color = 'blue'
 rvals, svals, dvals = rsd_iter
 rl = twax.plot(rvals,'--+', color='royalblue',label='Reliability')
 sl = twax.plot(svals,'--*', color='darkgreen',label='Sharpness')
-dl = twax.plot(dvals,'-', color='black', label='Distance to opt.')
+dl = twax.plot(dvals,'-', color='black', label='Distance/opt.')
+twax.set_ylabel('Performance ratios [-]')
 # legend
 lns = rl + sl + dl
 labs = [l.get_label() for l in lns]
-twax.legend(lns, labs,loc='upper right', bbox_to_anchor=(0.95, 1),alignment='right',fontsize=10)
+twax.legend(lns, labs,loc='upper right', bbox_to_anchor=(1.01, 1.01),alignment='left',fontsize=9)
 
-ax.set_ylabel('$log10(\Phi)$')
+ax.set_ylabel('log10($\Phi$)')
 
 # histogram
 ax = axes[1]
 
 bins=np.histogram(np.hstack((pr_logphi,pt_logphi)), bins=40)[1] #get the bin edges
-pr_logphi.hist(bins=bins,ax=ax,fc="0.5",ec="none",alpha=0.6,density=False,label='Prior (iteration 0)')
-pt_logphi.hist(bins=bins,ax=ax,fc="darkred",ec="none",alpha=0.6,density=False,label='Posterior (iteration 3)')
-ax.legend()
+pt_logphi.hist(bins=bins,ax=ax,fc="darkred",ec="none",alpha=0.6,density=False,label='Posterior (It. 3)')
+pr_logphi.hist(bins=bins,ax=ax,fc="0.5",ec="none",alpha=0.6,density=False,label='Prior (It. 0)')
+ax.yaxis.tick_right()
+ax.yaxis.set_label_position("right")
+ax.legend(loc='upper right')
+ax.set_ylabel('Frequency')
 _ = ax.set_xlabel('log10($\Phi$)')
 
-ax.text(5.01,42,'(b)',fontsize=25)
+ax.text(5.05,42,'b)',fontsize=20)
+fig.subplots_adjust(wspace=0.30)
 
 fig.tight_layout()
 
 fig.savefig(os.path.join('pproc','phi_rsd.pdf'),dpi=300)
 
 
-
 # ---------------------------------------------
 # fit statistics   
 # ---------------------------------------------
-
-
-oobs = obs.loc[obs.obgnme==og.lower(),:].copy()
-onames = oobs.obsnme.values
-odates = ogdates[og]
 
 # get all metrics 
 m = pyemu.utils.metrics.calc_metric_ensemble(ffpt_oe._df,pst)
@@ -499,7 +517,7 @@ m.columns = m.columns.set_levels(m.columns.levels[1].map(label_dic,na_action='ig
 allgstations = obslocs.loc[obslocs.index.str.startswith('P'),'label'].sort_values()
 allobswells = obslocs.loc[obslocs.index.str.contains('X'),'label'].sort_values()
 
-fig, axs = plt.subplots(1,2,figsize=(12,4),width_ratios=[len(allgstations),len(allobswells)])
+fig, axs = plt.subplots(1,2,figsize=(dbcol_width,0.33*dbcol_width),width_ratios=[len(allgstations),len(allobswells)])
 ax1 = m.loc[:,('KGE',allgstations)].boxplot(showfliers=False,ax=axs[0])
 ax1.set_xticklabels(allgstations.values)
 ax1.set_ylabel('KGE [-]')
