@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt 
 from matplotlib.lines import Line2D
-plt.rc('font', family='serif', size=11)
+plt.rc('font', family='serif', size=9)
 sgcol_width = 9/2.54
 mdcol_width = 14/2.54
 dbcol_width = 19/2.54
@@ -123,10 +123,17 @@ axs[3].grid(which='both')
 axs[3].set_ylabel('Recharge [mm/y]')
 axs[3].set_xlabel('')
 
+fig.align_ylabels(axs)
+
 for ax in axs:
-    ax.axvline(pd.to_datetime(rcp_start),alpha=0.5,lw=1.5,ls=':',color='black')
+    #ax.axvline(pd.to_datetime(rcp_start),alpha=0.8,lw=1.5,ls='--',color='black')
     ax.axvspan(cper_start,cper_end,color='grey',alpha=0.3)
     ax.axvspan(fper_start,fper_end,color='grey',alpha=0.3)
+
+cp_center = cper_start + (cper_end - cper_start)/2
+fp_center = fper_start + (fper_end - fper_start)/2
+axs[3].text(cp_center,720,'Historical\nReference Period',fontsize=8, ha='center')
+axs[3].text(fp_center,720,'Future\nReference Period',fontsize=8, ha='center')
 
 lls =  [ Line2D([0], [0], label=f'Climate models', marker='+', linestyle='', color='black',alpha=0.5)]
 lls += [Line2D([0], [0], label='Multi-model 10-year moving average',linestyle='-', color='tomato')]
@@ -149,8 +156,8 @@ for i, col in enumerate(['ptot','pet','runoff','rech']):
     vmax = max(cclimy[col].max(),fclimy[col].max())
     bins = np.linspace(vmin,vmax,10)
     # histograms 
-    cclimy[col].hist(ax=axs[0,i],color='grey',bins=bins,grid=False,alpha=0.8,label='historical')
-    fclimy[col].hist(ax=axs[0,i],color='darkred',bins=bins,grid=False,alpha=0.5, label='future')
+    cclimy[col].hist(ax=axs[0,i],color='grey',bins=bins,grid=False,alpha=0.8,label='Historical')
+    fclimy[col].hist(ax=axs[0,i],color='darkred',bins=bins,grid=False,alpha=0.5, label='Future')
     # boxplot 
     medianprops = dict(color='black')
     meanprops = dict(linestyle=None,marker='+', markeredgecolor='black', markerfacecolor='black')
@@ -171,7 +178,7 @@ for i, col in enumerate(['ptot','pet','runoff','rech']):
     axs[1,i].set_yticklabels(['',''])
     axs[1,i].set_xlabel(f'{labels_dic[col]} [mm/y]')
 
-axs[0,0].legend(loc='upper left')
+axs[0,0].legend(loc='upper center')
 axs[1,0].set_yticklabels(['fut','hist.'])
 
 # share_y for histograms
@@ -180,7 +187,7 @@ for ax in haxs : ax.set_ylim(0,230)
 
 for ax in haxs[1:] : ax.set_yticklabels([])
 
-haxs[0].set_ylabel('[mm/y]')  
+haxs[0].set_ylabel('Frequency')  
 
 fig.tight_layout()
 
