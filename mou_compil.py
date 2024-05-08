@@ -68,7 +68,7 @@ for master_dir in master_dirs:
     year = int(master_dir.split('_')[-2])
     qt = master_dir.split('_')[-3]
     prefix = 'hist.' if year < 2005 else 'fut.'
-    color = 'grey' if year < 2005 else 'tan'
+    color = 'grey' if year < 2005 else 'darkred'
     marker=marker_dic[qt]
     plot_pareto(master_dir, gen=10, label=f'{prefix}-{qt}', color=color, marker=marker, ax=ax)
 
@@ -102,11 +102,11 @@ hist_q95_marker = Line2D([0], [0], label='', marker='v',
     markersize=8, markeredgecolor='black', markerfacecolor='grey', linestyle='')
 
 fut_q05_marker = Line2D([0], [0], label='', marker='^',
-    markersize=8, markeredgecolor='black', markerfacecolor='tan', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='darkred', linestyle='')
 fut_q50_marker = Line2D([0], [0], label='', marker='o',
-    markersize=8, markeredgecolor='black', markerfacecolor='tan', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='darkred', linestyle='')
 fut_q95_marker = Line2D([0], [0], label='', marker='v',
-    markersize=8, markeredgecolor='black', markerfacecolor='tan', linestyle='')
+    markersize=8, markeredgecolor='black', markerfacecolor='darkred', linestyle='')
 
 
 lg = ax.legend(handles=[q95_label, q50_label, q05_label,
