@@ -75,7 +75,6 @@ for master_dir in master_dirs:
 
 
 # lines 
-
 fac0_rei = pyemu.pst_utils.read_resfile(os.path.join(master_dir,'mou_lizonne_fac0.base.rei'))
 fac0_pump = fac0_rei.loc['tot_pump','modelled']*1e-6
 fac0_deficit = fac0_rei.loc['deficit_tot','modelled']*1e-6

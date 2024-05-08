@@ -236,14 +236,14 @@ pump_org = pd.concat([aqpump_org,rivpump_org])*monthly_m3sec_to_m3
 # dv analysis for opt_gen
 # ---------------------------------------------
 
-
-
 # plot aqpump factors 
 
 # load dv and obs of pareto members at gen=opt_gen
-dv_pop = read_dv_pop(f'mou_lizonne.{opt_gen}.dv_pop.csv')
+#dv_pop = read_dv_pop(f'mou_lizonne.{opt_gen}.dv_pop.csv')
+dv_pop = read_dv_pop(f'mou_lizonne.{opt_gen}.archive.dv_pop.csv')
 dv_pop = dv_pop.loc[feas_front_members] # subset to pareto members
-obs_pop = pd.read_csv(f'mou_lizonne.{opt_gen}.chance.obs_pop.csv',index_col=0)
+#obs_pop = pd.read_csv(f'mou_lizonne.{opt_gen}.chance.obs_pop.csv',index_col=0)
+obs_pop = pd.read_csv(f'mou_lizonne.{opt_gen}.archive.obs_pop.csv',index_col=0)
 obs_pop = obs_pop.loc[feas_front_members] # subset to pareto members
 
 facvals = dv_pop.T
@@ -308,14 +308,37 @@ gstations_gdf['label2']= gstations_gdf.label.replace(['P8284010', 'P8215010', 'P
 rivfacvals = dv_pop.T.loc[('riv',slice(None),slice(None))]
 mrivfacvals = rivfacvals.mean(axis=1).unstack()
 mrivfacvals.index = mrivfacvals.index.droplevel('year')
+
+# load pumping 
+rivpumpvals = pump_opt.loc[('riv',slice(None),slice(None))] # extract riv pump
+mrivpumpvals = rivpumpvals.mean(axis=1).unstack() # mean over pareto members
+mrivpumpvals.index = mrivpumpvals.index.droplevel('year')
+
+orgrivpumpvals = pump_org.loc[facvals.index].loc[('riv',slice(None),slice(None))].unstack()
+orgrivpumpvals.index = orgrivpumpvals.index.droplevel('year')
+
+
+# add factors to shp
 simriv_gdf = simriv_gdf.merge(mrivfacvals,left_index=True, right_index=True)
+vmin=0
+vmax=10
+
+'''
+# pumping 
+simriv_gdf = simriv_gdf.merge(mrivpumpvals.div(1e6),left_index=True, right_index=True)
+# original pumping 
+simriv_gdf = simriv_gdf.merge(orgrivpumpvals,left_index=True, right_index=True)
+vmin = -4500
+vmax=205000
+'''
+
 
 # plot maps
 for m,ax in zip(mmonths.keys(),axs[1,:]):
     # basin outline
     ax = basin_gdf.boundary.plot(ax=ax,color='black', linewidth=0.5)
     # pumping factors
-    ax = simriv_gdf.plot(ax=ax,column=m,vmin=0,vmax=10)
+    ax = simriv_gdf.plot(ax=ax,column=m,vmin=vmin,vmax=vmax)
     # gaging stations
     ax = gstations_gdf.plot(marker='^',c='red',
         edgecolor='black', markersize=22, label='Gaging stations', ax=ax)
@@ -357,6 +380,48 @@ fig.text(0.008,0.95,'(a)',fontsize=14,transform=fig.transFigure)
 fig.text(0.008,0.49,'(b)',fontsize=14,transform=fig.transFigure)
 
 fig.savefig(os.path.join('pproc',f'pareto_rivpumpfac.pdf'),dpi=300)
+
+
+
+
+# ---------------------------------------------
+# plot histograms alone   
+# ---------------------------------------------
+
+
+# plot
+fig,axs=plt.subplots(1,4,figsize=(dbcol_width,0.3*dbcol_width))
+for m,ax in zip([6,7,8,9],axs):
+    year = dv_pop.columns.get_level_values('year').max()
+    # plot riv factors (all reaches)
+    ax.bar(0,pump_org.loc[('riv',slice(None),year,m)].sum(),color='grey',alpha=0.5)
+    # reduce value of river pumping for plotting 
+    pump_opt_vals =[min(p,4e6) for p in  pump_opt.loc[('riv',slice(None),year,m)].sum(axis=0).values]
+    ax.plot([0]*len(pump_opt_vals),pump_opt_vals,ls='',marker='+', c='k')
+    # plot aq factors 
+    for i,l in enumerate([1,3,5]):
+        ax.bar(i+1,pump_org.loc[('aq',l,year,m)],color='grey',alpha=0.5,label='Original')
+        pump_opt_vals = pump_opt.loc[('aq',l,year,m),:].values
+        ax.plot([i+1]*len(pump_opt_vals),pump_opt_vals,ls='',marker='+', c='k',label= 'Optimized')
+    # rename ticks 
+    ax.xaxis.set_ticks(range(i+2))
+    if m>6:
+        ax.set_yticklabels([])
+    ax.set_xticklabels(['RIV','COST','TURO','CENO'],fontsize=8)
+    ax.set_title(mmonths[m])
+    ax.set_ylim(0,4e6)
+
+
+ytlbls = axs[0].get_yticklabels()
+ytlbls[-1].set_text('>4')
+axs[0].set_yticklabels(ytlbls)
+handles, labels = axs[0].get_legend_handles_labels()
+axs[0].legend(handles=[handles[0],handles[-1]],labels=[labels[0],labels[-1]],loc='upper right')
+axs[0].set_ylabel('Pumping [Mm$^3$/month]')
+
+fig.tight_layout()
+
+fig.savefig(os.path.join('pproc',f'pareto_histo.pdf'),dpi=300)
 
 
 # ---------------------------------------------
